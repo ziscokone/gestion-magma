@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvel abonnement — MAGMA{% endblock %}
+
+{% block extra_css %}
+<style>
+.operateur-badge {
+    cursor: pointer;
+    padding: .5rem .9rem;
+    font-size: .85rem;
+    color: #fff;
+    background-color: #6c757d;
+}
+.operateur-badge[data-operateur="wave"]   { background-color: #00CED1; }
+.operateur-badge[data-operateur="orange"] { background-color: #FF6600; }
+.operateur-badge[data-operateur="mtn"]    { background-color: #FFCC00; color: #000; }
+.operateur-badge[data-operateur="moov"]   { background-color: #003366; }
+.form-check-input:checked + .operateur-badge {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 760px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-card-checklist me-2"></i>Nouvel abonnement
+        </div>
+        <div class="card-body p-4">
+            {% if renouvellement %}
+            <div class="alert alert-info">
+                <i class="bi bi-arrow-repeat me-2"></i>Renouvellement pré-rempli — vérifiez le mode de paiement puis enregistrez.
+            </div>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="text-uppercase text-muted small fw-bold mb-2">Client</div>
+                <div class="row">
+                    <div class="col-md-6 position-relative">
+                        {% include "comptes/_field.html" with field=form.telephone %}
+                        <small id="client-hint" class="text-muted"></small>
+                        <div id="client-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000; display:none;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.nom_complet %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Abonnement</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.type_abonnement %}
+                        <div class="text-accent fw-bold" id="prix-affiche"></div>
+                    </div>
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.date_debut %}
+                        <small class="text-muted" id="date-fin-affichee"></small>
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Versement initial (optionnel)</div>
+                <p class="text-muted small mb-2">
+                    Le paiement d'un abonnement peut être fractionné en plusieurs fois — laisse ce
+                    champ vide si le client ne paie rien aujourd'hui, tu pourras ajouter des
+                    versements plus tard depuis la fiche de l'abonnement.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.montant_verse %}
+                    </div>
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.mode_paiement %}
+                    </div>
+                </div>
+                <div class="row" id="operateur-row" style="display:none;">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Opérateur Mobile Money</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for value, label in form.operateur_mobile_money.field.choices %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="operateur_mobile_money"
+                                       id="operateur-{{ value }}" value="{{ value }}"
+                                       {% if form.operateur_mobile_money.value == value %}checked{% endif %}>
+                                <label class="form-check-label badge operateur-badge" for="operateur-{{ value }}"
+                                       data-operateur="{{ value }}">{{ label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.operateur_mobile_money.errors %}
+                        <div class="text-danger small mt-1">{{ form.operateur_mobile_money.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'abonnements:abonnement_list' %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ types_info|json_script:"types-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const TYPES = JSON.parse(document.getElementById('types-data').textContent);
+    const telephoneInput = document.getElementById('id_telephone');
+    const nomInput = document.getElementById('id_nom_complet');
+    const hint = document.getElementById('client-hint');
+    const typeSelect = document.getElementById('id_type_abonnement');
+    const dateDebutInput = document.getElementById('id_date_debut');
+    const prixAffiche = document.getElementById('prix-affiche');
+    const dateFinAffichee = document.getElementById('date-fin-affichee');
+
+    function formatFCFA(montant) {
+        const n = Math.round(Number(montant));
+        if (isNaN(n)) { return ''; }
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+    }
+
+    function afficherPrixEtDateFin() {
+        const info = TYPES[typeSelect.value];
+        if (!info) { prixAffiche.textContent = ''; dateFinAffichee.textContent = ''; return; }
+        prixAffiche.textContent = formatFCFA(info.prix);
+        if (dateDebutInput.value) {
+            const debut = new Date(dateDebutInput.value + 'T00:00:00');
+            const fin = new Date(debut.getTime() + info.duree_jours * 24 * 60 * 60 * 1000);
+            dateFinAffichee.textContent = 'Expire le ' + fin.toLocaleDateString('fr-FR') + ' (' + info.duree_jours + ' jours)';
+        }
+    }
+    typeSelect.addEventListener('change', afficherPrixEtDateFin);
+    dateDebutInput.addEventListener('change', afficherPrixEtDateFin);
+    afficherPrixEtDateFin();
+
+    const modePaiementSelect = document.getElementById('id_mode_paiement');
+    const operateurRow = document.getElementById('operateur-row');
+
+    function toggleOperateur() {
+        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'flex' : 'none';
+    }
+    modePaiementSelect.addEventListener('change', toggleOperateur);
+    toggleOperateur();
+
+    const suggestionsBox = document.getElementById('client-suggestions');
+
+    function hideSuggestions() {
+        suggestionsBox.style.display = 'none';
+        suggestionsBox.innerHTML = '';
+    }
+
+    function selectionnerClient(telephone, nom) {
+        telephoneInput.value = telephone;
+        nomInput.value = nom;
+        nomInput.readOnly = true;
+        hint.textContent = 'Client existant';
+        hint.className = 'text-success';
+        hideSuggestions();
+    }
+
+    function afficherSuggestions(resultats) {
+        if (!resultats.length) {
+            hideSuggestions();
+            nomInput.readOnly = false;
+            hint.textContent = 'Nouveau client — merci de renseigner son nom';
+            hint.className = 'text-warning';
+            return;
+        }
+        hint.textContent = '';
+        suggestionsBox.innerHTML = resultats.map(function (c) {
+            return '<button type="button" class="list-group-item list-group-item-action suggestion-item" ' +
+                   'data-telephone="' + c.telephone + '" data-nom="' + c.nom_complet + '">' +
+                   '<strong>' + c.nom_complet + '</strong> — ' + c.telephone +
+                   '</button>';
+        }).join('');
+        suggestionsBox.style.display = 'block';
+        suggestionsBox.querySelectorAll('.suggestion-item').forEach(function (item) {
+            item.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                selectionnerClient(item.dataset.telephone, item.dataset.nom);
+            });
+        });
+    }
+
+    let timer = null;
+    telephoneInput.addEventListener('input', function () {
+        clearTimeout(timer);
+        const telephone = telephoneInput.value.trim();
+        nomInput.readOnly = false;
+        hint.textContent = '';
+
+        if (telephone.length < 3) {
+            hideSuggestions();
+            return;
+        }
+
+        timer = setTimeout(function () {
+            fetch("{% url 'clients:suggerer_clients' %}?q=" + encodeURIComponent(telephone))
+                .then(r => r.json())
+                .then(data => afficherSuggestions(data.resultats));
+        }, 300);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!suggestionsBox.contains(e.target) && e.target !== telephoneInput) {
+            hideSuggestions();
+        }
+    });
+
+    // Pré-remplissage lors d'un renouvellement : le client est déjà connu
+    if (telephoneInput.value && nomInput.value) {
+        nomInput.readOnly = true;
+        hint.textContent = 'Client existant';
+        hint.className = 'text-success';
+    }
+})();
+</script>
+{% endblock %}

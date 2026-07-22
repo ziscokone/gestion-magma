@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Sortie de stock (perte / usage interne) — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 620px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-box-arrow-up me-2"></i>Sortie de stock — perte / usage interne
+        </div>
+        <div class="card-body p-4">
+            <p class="text-muted small">
+                Utilisez cet écran pour les sorties qui ne correspondent pas à une vente : casse, produit périmé,
+                consommation interne... Aucun montant n'est facturé au client.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                {% include "comptes/_field.html" with field=form.produit %}
+                {% include "comptes/_field.html" with field=form.quantite %}
+                {% include "comptes/_field.html" with field=form.motif %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'stock:mouvement_list' %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

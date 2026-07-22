@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Fournisseurs — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-truck me-2"></i>Fournisseurs</span>
+            {% if user.has_global_access %}
+            <a href="{% url 'stock:fournisseur_create' %}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-lg me-1"></i>Ajouter
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher un fournisseur..." value="{{ search_query }}">
+            </form>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Téléphone</th>
+                        <th>Achats effectués</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fournisseur in fournisseurs %}
+                    <tr>
+                        <td>{{ fournisseur.nom }}</td>
+                        <td>{{ fournisseur.telephone|default:"—" }}</td>
+                        <td>{{ fournisseur.nombre_achats }}</td>
+                        <td>
+                            {% if fournisseur.actif %}
+                            <span class="badge badge-disponible"><i class="bi bi-check-circle-fill me-1"></i>Actif</span>
+                            {% else %}
+                            <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                                <i class="bi bi-x-circle-fill me-1"></i>Inactif
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if user.has_global_access %}
+                            <a href="{% url 'stock:fournisseur_update' fournisseur.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Aucun fournisseur.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

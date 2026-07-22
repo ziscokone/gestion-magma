@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}{{ produit.nom }} — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Colonne gauche : infos + stats -->
+        <div class="col-lg-4 mb-3">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-box-seam me-2"></i>Produit</span>
+                    {% if user.has_global_access %}
+                    <a href="{% url 'stock:produit_update' produit.pk %}" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Nom</strong><br>{{ produit.nom }}</p>
+                    <p class="mb-2"><strong>Catégorie</strong><br>{{ produit.categorie.nom }}</p>
+                    <p class="mb-2"><strong>Unité</strong><br>{{ produit.get_unite_display }}</p>
+                    <p class="mb-2"><strong>Prix d'achat</strong><br>{{ produit.prix_achat|fcfa }}</p>
+                    <p class="mb-0"><strong>Prix de vente</strong><br>{% if produit.prix_vente %}{{ produit.prix_vente|fcfa }}{% else %}—{% endif %}</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart me-2"></i>Stock
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="stat-card">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon-circle {% if produit.stock_faible %}danger{% else %}success{% endif %}">
+                                        <i class="bi bi-box-seam-fill"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="stat-value" style="{% if produit.stock_faible %}color: var(--color-danger);{% endif %}">{{ produit.stock_actuel }}</div>
+                                        <div class="stat-label">{{ produit.get_unite_display }}(s) en stock</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-card">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon-circle accent"><i class="bi bi-cash-stack"></i></div>
+                                    <div class="text-start">
+                                        <div class="stat-value">{{ produit.valeur_stock|fcfa }}</div>
+                                        <div class="stat-label">Valeur du stock</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mb-0">
+                        {% if produit.stock_faible %}
+                        <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>Stock faible (seuil : {{ produit.seuil_alerte }})
+                        </span>
+                        {% else %}
+                        <span class="badge badge-disponible"><i class="bi bi-check-circle-fill me-1"></i>Stock suffisant</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne droite : historique des mouvements -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clock-history me-2"></i>Historique des mouvements</span>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'stock:approvisionnement_create' %}?produit={{ produit.pk }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-box-arrow-in-down me-1"></i>Approvisionner
+                        </a>
+                        <a href="{% url 'stock:vente_create' %}?produit={{ produit.pk }}" class="btn btn-sm btn-success">
+                            <i class="bi bi-cart-check me-1"></i>Vendre
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Quantité</th>
+                                <th>Prix unitaire</th>
+                                <th>Détail</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mouvement in mouvements %}
+                            <tr>
+                                <td>{{ mouvement.date|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if mouvement.type_mouvement == 'entree' %}
+                                    <span class="badge badge-disponible"><i class="bi bi-box-arrow-in-down me-1"></i>Entrée</span>
+                                    {% else %}
+                                    <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                                        <i class="bi bi-box-arrow-up me-1"></i>Sortie
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ mouvement.quantite }}</td>
+                                <td>
+                                    {% if mouvement.type_mouvement == 'entree' %}
+                                    <span class="montant-entree">{{ mouvement.prix_unitaire|fcfa }}</span>
+                                    {% else %}
+                                    <span class="montant-sortie">{{ mouvement.prix_unitaire|fcfa }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if mouvement.type_mouvement == 'entree' %}
+                                        {{ mouvement.fournisseur.nom|default:"—" }}
+                                        {% if mouvement.date_peremption %}<br><small class="text-muted">Péremption : {{ mouvement.date_peremption|date:"d/m/Y" }}</small>{% endif %}
+                                    {% else %}
+                                        {{ mouvement.get_motif_display }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Aucun mouvement enregistré.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% include "core/_pagination.html" with page_obj=mouvements %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

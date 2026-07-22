@@ -1,0 +1,596 @@
+/* ==========================================================================
+   MAGMA - Styles personnalisés
+   Palette de couleurs professionnelle et douce pour usage prolongé
+   ========================================================================== */
+
+/* Variables CSS */
+:root {
+    /* Couleurs principales */
+    --color-bg-main: #F8F9FA;
+    --color-bg-card: #FFFFFF;
+    --color-text-primary: #343A40;
+    --color-text-secondary: #6C757D;
+    --color-accent: #1e3260;
+    --color-accent-hover: #162550;
+
+    /* Couleurs de statut */
+    --color-success: #5D8A66;
+    --color-success-light: #D4EDDA;
+    --color-warning: #D4A84B;
+    --color-warning-light: #FFF3CD;
+    --color-danger: #C45C5C;
+    --color-danger-light: #F8D7DA;
+
+    /* Bordures et ombres */
+    --color-border: #DEE2E6;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+
+    /* Typographie */
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-size-base: 14px;
+    --line-height-base: 1.5;
+}
+
+/* Reset et base */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-main);
+}
+
+/* Conteneur personnalisé - 90% de l'écran */
+.container {
+    width: 90% !important;
+    max-width: 100% !important;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* Titres */
+h1, .h1 { font-size: 1.75rem; font-weight: 600; }
+h2, .h2 { font-size: 1.5rem; font-weight: 600; }
+h3, .h3 { font-size: 1.25rem; font-weight: 600; }
+h4, .h4 { font-size: 1.1rem; font-weight: 600; }
+h5, .h5 { font-size: 1rem; font-weight: 600; }
+h6, .h6 { font-size: 0.9rem; font-weight: 600; }
+
+/* Liens */
+a {
+    color: var(--color-accent);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+
+/* Les liens de menu ne doivent jamais être soulignés, y compris au survol
+   (sinon la règle générale `a:hover { text-decoration: underline }` s'applique) */
+.nav-link,
+.navbar-brand,
+.dropdown-item,
+.modules-btn {
+    text-decoration: none !important;
+}
+
+.navbar {
+    background-color: var(--color-accent) !important;
+    border-bottom: 1px solid var(--color-accent-hover);
+    box-shadow: var(--shadow-sm);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #FFFFFF !important;
+}
+
+.nav-link {
+    color: #FFFFFF !important;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    margin: 0 2px;
+    transition: background-color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: #FFFFFF !important;
+    background-color: #E67E22;
+}
+
+.nav-link.active {
+    color: #FFFFFF !important;
+    background-color: #E67E22;
+    font-weight: 700;
+}
+
+.navbar .dropdown:hover > .nav-link,
+.navbar .nav-item:hover > .nav-link {
+    background-color: #E67E22;
+}
+
+.nav-link i {
+    color: #FFFFFF !important;
+    font-weight: 700;
+}
+
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.navbar-toggler-icon {
+    filter: brightness(0) invert(1);
+}
+
+.dropdown-toggle::after {
+    color: #FFFFFF;
+}
+
+.navbar .text-muted {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.navbar .dropdown-menu {
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-accent-hover);
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem 0;
+}
+
+.navbar .dropdown-item {
+    color: #FFFFFF;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+}
+
+.navbar .dropdown-item:hover,
+.navbar .dropdown-item:focus {
+    background-color: #E67E22;
+    color: #FFFFFF;
+}
+
+.navbar .dropdown-item i {
+    color: #FFFFFF;
+}
+
+.navbar .dropdown-header {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.navbar .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Cards et conteneurs
+   ========================================================================== */
+
+.card {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+    background-color: var(--color-accent);
+    border-bottom: 1px solid var(--color-accent-hover);
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    color: #FFFFFF;
+}
+
+.card-header h1,
+.card-header h2,
+.card-header h3,
+.card-header h4,
+.card-header h5,
+.card-header h6,
+.card-header .h1,
+.card-header .h2,
+.card-header .h3,
+.card-header .h4,
+.card-header .h5,
+.card-header .h6 {
+    color: #FFFFFF;
+    margin-bottom: 0;
+}
+
+.card-header i {
+    color: #FFFFFF;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* ==========================================================================
+   Boutons
+   ========================================================================== */
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.4rem 0.85rem;
+    transition: all 0.2s ease;
+    text-decoration: none !important;
+}
+
+.btn-primary {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+}
+
+.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.btn-success:hover {
+    background-color: #4E7557;
+    border-color: #4E7557;
+}
+
+.btn-warning {
+    background-color: var(--color-warning);
+    border-color: var(--color-warning);
+    color: var(--color-text-primary);
+}
+
+.btn-warning:hover {
+    background-color: #C49A3D;
+    border-color: #C49A3D;
+}
+
+.btn-danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.btn-danger:hover {
+    background-color: #B04D4D;
+    border-color: #B04D4D;
+}
+
+.btn-outline-primary {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+/* ==========================================================================
+   Formulaires
+   ========================================================================== */
+
+.form-control,
+.form-select {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(30, 50, 96, 0.15);
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0.4rem;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--color-accent);
+    border-bottom: 2px solid var(--color-accent-hover);
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #FFFFFF;
+    padding: 0.5rem 0.65rem;
+}
+
+.table tbody td {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.9rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(30, 50, 96, 0.03);
+}
+
+/* ==========================================================================
+   Badges et statuts
+   ========================================================================== */
+
+.badge {
+    font-weight: 500;
+    font-size: 0.8rem;
+    padding: 0.3em 0.55em;
+    border-radius: 4px;
+}
+
+.badge-disponible {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+}
+
+.badge-reserve {
+    background-color: var(--color-warning-light);
+    color: #856404;
+}
+
+/* ==========================================================================
+   Dashboard widgets
+   ========================================================================== */
+
+.stat-card {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+    transition: box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    line-height: 1.2;
+}
+
+.stat-card .stat-label {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin-top: 0.4rem;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .stat-card .stat-value {
+        font-size: 1.3rem;
+    }
+
+    h1, .h1 { font-size: 1.4rem; }
+    h2, .h2 { font-size: 1.25rem; }
+    h3, .h3 { font-size: 1.1rem; }
+    h4, .h4 { font-size: 1rem; }
+}
+
+/* ==========================================================================
+   Utilitaires
+   ========================================================================== */
+
+.text-accent {
+    color: var(--color-accent);
+}
+
+.bg-accent-light {
+    background-color: rgba(30, 50, 96, 0.1);
+}
+
+.border-accent {
+    border-color: var(--color-accent) !important;
+}
+
+.dropdown-menu {
+    font-size: 0.9rem;
+}
+
+.dropdown-item {
+    padding: 0.4rem 1rem;
+}
+
+.dropdown-header {
+    font-size: 0.8rem;
+    padding: 0.3rem 1rem;
+}
+
+.alert {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+}
+
+small, .small {
+    font-size: 0.8rem;
+}
+
+.text-muted {
+    font-size: 0.85rem;
+}
+
+/* Bouton "Modules" dans la navbar contextuelle */
+.modules-btn {
+    background: rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.3) !important;
+    border-radius: 6px !important;
+    font-size: 0.82rem !important;
+    padding: 0.3rem 0.65rem !important;
+    transition: background 0.2s !important;
+}
+
+.modules-btn:hover {
+    background: rgba(255,255,255,0.22) !important;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-secondary);
+}
+
+/* Animation de chargement */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+/* ==========================================================================
+   Pagination (repris du design "c-pagination" du projet billetterie)
+   ========================================================================== */
+
+.pagination-zone {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pagination-info {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.c-pagination {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.c-pagination .page-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.15s;
+    cursor: pointer;
+}
+
+.c-pagination .page-btn:hover {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.c-pagination .page-btn.active {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+}
+
+.c-pagination .page-btn.dots {
+    border: none;
+    background: transparent;
+    cursor: default;
+    color: #9ca3af;
+}
+
+.c-pagination .page-btn.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Icônes de statistiques (mêmes dégradés que les tuiles du hub)
+   ========================================================================== */
+
+.stat-icon-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.stat-icon-circle.accent  { background: linear-gradient(135deg, #5b82c0, var(--color-accent)); }
+.stat-icon-circle.success { background: linear-gradient(135deg, #2ecc71, #1a9e55); }
+.stat-icon-circle.danger  { background: linear-gradient(135deg, #e05b52, #b52b22); }
+.stat-icon-circle.warning { background: linear-gradient(135deg, #f0914e, #c75f1e); }
+
+/* Montant coloré selon le sens de l'opération (journal budgétaire) */
+.montant-entree {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+.montant-sortie {
+    color: var(--color-danger);
+    font-weight: 700;
+}

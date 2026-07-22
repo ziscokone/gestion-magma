@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Mouvements de stock — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-arrow-left-right me-2"></i>Mouvements de stock</span>
+            <div class="d-flex gap-2">
+                <a href="{% url 'stock:ajustement_create' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-box-arrow-up me-1"></i>Perte / Usage interne
+                </a>
+                <a href="{% url 'stock:approvisionnement_create' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-box-arrow-in-down me-1"></i>Approvisionnement
+                </a>
+                <a href="{% url 'stock:vente_create' %}" class="btn btn-sm btn-success">
+                    <i class="bi bi-cart-check me-1"></i>Nouvelle vente
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-auto">
+                    <select name="type" class="form-select" onchange="this.form.submit()">
+                        <option value="tous" {% if type_filtre == 'tous' %}selected{% endif %}>Tous les mouvements</option>
+                        <option value="entree" {% if type_filtre == 'entree' %}selected{% endif %}>Entrées</option>
+                        <option value="sortie" {% if type_filtre == 'sortie' %}selected{% endif %}>Sorties</option>
+                    </select>
+                </div>
+                <div class="col-auto flex-grow-1">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher un produit..." value="{{ search_query }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Produit</th>
+                        <th>Type</th>
+                        <th>Quantité</th>
+                        <th>Montant</th>
+                        <th>Détail</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mouvement in mouvements %}
+                    <tr>
+                        <td>{{ mouvement.date|date:"d/m/Y H:i" }}</td>
+                        <td><a href="{% url 'stock:produit_detail' mouvement.produit.pk %}">{{ mouvement.produit.nom }}</a></td>
+                        <td>
+                            {% if mouvement.type_mouvement == 'entree' %}
+                            <span class="badge badge-disponible"><i class="bi bi-box-arrow-in-down me-1"></i>Entrée</span>
+                            {% else %}
+                            <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                                <i class="bi bi-box-arrow-up me-1"></i>Sortie
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ mouvement.quantite }}</td>
+                        <td>
+                            {% if mouvement.type_mouvement == 'entree' %}
+                            <span class="montant-entree"><i class="bi bi-plus-circle-fill me-1"></i>{{ mouvement.montant|fcfa }}</span>
+                            {% else %}
+                            <span class="montant-sortie"><i class="bi bi-dash-circle-fill me-1"></i>{{ mouvement.montant|fcfa }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mouvement.type_mouvement == 'entree' %}
+                                {{ mouvement.fournisseur.nom|default:"—" }}
+                            {% else %}
+                                {{ mouvement.get_motif_display }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if mouvement.vente_id %}
+                            <a href="{% url 'stock:vente_ticket_pdf' mouvement.vente_id %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Ticket de vente">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Aucun mouvement.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Vente enregistrée — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 680px; margin: 0 auto;">
+        <div class="card-body p-4 text-center">
+            <div class="stat-icon-circle success mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h4 class="mb-1">Vente enregistrée !</h4>
+            <p class="text-muted mb-4">Réf. {{ vente.numero_vente }}</p>
+
+            <div class="stat-card mb-4 text-start">
+                <table class="table table-borderless mb-0">
+                    <thead>
+                        <tr class="text-muted small text-uppercase">
+                            <th>Produit</th>
+                            <th class="text-end">Qté</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in vente.lignes.all %}
+                        <tr>
+                            <td>
+                                {{ ligne.produit.nom }}
+                                <div class="text-muted small">{{ ligne.prix_unitaire|fcfa }} / unité</div>
+                            </td>
+                            <td class="text-end">{{ ligne.quantite }} {{ ligne.produit.get_unite_display }}</td>
+                            <td class="text-end fw-bold">{{ ligne.montant|fcfa }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td class="text-muted">Mode de paiement</td>
+                            <td colspan="2" class="text-end">{{ vente.mode_paiement_affiche }}</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="fw-bold">TOTAL</td>
+                            <td colspan="2" class="text-end fw-bold fs-5" style="color: var(--color-accent);">{{ vente.montant_total|fcfa }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="{% url 'stock:vente_ticket_pdf' vente.pk %}" target="_blank" class="btn btn-outline-primary">
+                    <i class="bi bi-printer me-1"></i>Imprimer le ticket
+                </a>
+                <a href="{% url 'stock:vente_create' %}" class="btn btn-success">
+                    <i class="bi bi-plus-lg me-1"></i>Nouvelle vente
+                </a>
+                <a href="{% url 'stock:mouvement_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Journal des mouvements
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

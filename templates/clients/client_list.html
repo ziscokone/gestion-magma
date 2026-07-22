@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Clients — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-people-fill me-2"></i>Clients</span>
+            <a href="{% url 'clients:seance_list' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left me-1"></i>Retour aux séances
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher un client (nom, téléphone)..." value="{{ search_query }}">
+            </form>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom complet</th>
+                        <th>Téléphone</th>
+                        <th>Objectif</th>
+                        <th>Séances</th>
+                        <th>Dernière visite</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clients %}
+                    <tr>
+                        <td>{{ c.nom_complet }}</td>
+                        <td>{{ c.telephone }}</td>
+                        <td>{{ c.get_objectif_display|default:"—" }}</td>
+                        <td>{{ c.nombre_seances }}</td>
+                        <td>{{ c.derniere_seance.date|date:"d/m/Y"|default:"—" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'clients:client_detail' c.public_id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucun client.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

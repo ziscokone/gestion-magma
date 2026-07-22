@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} un produit — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 760px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-box-seam me-2"></i>{% if object %}Modifier le produit{% else %}Ajouter un produit{% endif %}
+        </div>
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="text-uppercase text-muted small fw-bold mb-2">Identité</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.nom %}
+                    </div>
+                    <div class="col-md-3">
+                        {% include "comptes/_field.html" with field=form.categorie %}
+                    </div>
+                    <div class="col-md-3">
+                        {% include "comptes/_field.html" with field=form.unite %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Tarifs & alerte</div>
+                <div class="row">
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.prix_achat %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.prix_vente %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.seuil_alerte %}
+                    </div>
+                </div>
+                {% include "comptes/_field.html" with field=form.actif %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'stock:produit_list' %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Configuration — MAGMA{% endblock %}
+
+{% block extra_css %}
+<style>
+.config-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+}
+
+.config-tile {
+    width: 180px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 26px 14px 20px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 1px 8px rgba(0,0,0,.04);
+    border: 1px solid rgba(0,0,0,.055);
+    transition: box-shadow .22s ease, transform .22s ease;
+}
+
+.config-tile:hover {
+    box-shadow: 0 12px 36px rgba(0,0,0,.13);
+    transform: translateY(-5px) scale(1.025);
+    text-decoration: none;
+    color: inherit;
+}
+
+.config-tile-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    margin: 0 auto 14px;
+    color: #fff;
+    transition: transform .22s ease;
+}
+.config-tile:hover .config-tile-icon { transform: scale(1.08); }
+
+.config-tile-icon.clients      { background: linear-gradient(135deg, #5b82c0, #3a5f9a); }
+.config-tile-icon.abonnements  { background: linear-gradient(135deg, #2ecc71, #1a9e55); }
+.config-tile-icon.stock        { background: linear-gradient(135deg, #f0914e, #c75f1e); }
+.config-tile-icon.budget       { background: linear-gradient(135deg, #a05dc8, #7b3fa8); }
+.config-tile-icon.comptes      { background: linear-gradient(135deg, #e05b52, #b52b22); }
+
+.config-tile-name {
+    font-weight: 700;
+    font-size: .9rem;
+    color: #1a2e4a;
+    margin-bottom: 4px;
+}
+
+.config-tile-desc {
+    font-size: .73rem;
+    color: #9ca3af;
+    line-height: 1.4;
+    margin: 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-sliders me-2"></i>Configuration — Types & catégories
+        </div>
+        <div class="card-body py-4">
+            <p class="text-muted text-center mb-4">
+                Accès rapide aux éléments configurables de chaque module — pas besoin de naviguer
+                dans chaque module pour ajouter un type ou une catégorie.
+            </p>
+            <div class="config-grid">
+                <a href="{% url 'clients:type_prestation_list' %}" class="config-tile">
+                    <div class="config-tile-icon clients"><i class="bi bi-tags-fill"></i></div>
+                    <div class="config-tile-name">Types de prestation</div>
+                    <p class="config-tile-desc">Module Clients & Séances</p>
+                </a>
+                <a href="{% url 'abonnements:type_abonnement_list' %}" class="config-tile">
+                    <div class="config-tile-icon abonnements"><i class="bi bi-tags-fill"></i></div>
+                    <div class="config-tile-name">Types d'abonnement</div>
+                    <p class="config-tile-desc">Module Abonnements</p>
+                </a>
+                <a href="{% url 'stock:categorie_produit_list' %}" class="config-tile">
+                    <div class="config-tile-icon stock"><i class="bi bi-tags-fill"></i></div>
+                    <div class="config-tile-name">Catégories de produits</div>
+                    <p class="config-tile-desc">Module Gestion de Stock</p>
+                </a>
+                <a href="{% url 'budget:categorie_charge_list' %}" class="config-tile">
+                    <div class="config-tile-icon budget"><i class="bi bi-tags-fill"></i></div>
+                    <div class="config-tile-name">Catégories de charge</div>
+                    <p class="config-tile-desc">Module Gestion Budgétaire</p>
+                </a>
+                <a href="{% url 'comptes:utilisateur_list' %}" class="config-tile">
+                    <div class="config-tile-icon comptes"><i class="bi bi-people-fill"></i></div>
+                    <div class="config-tile-name">Utilisateurs & Modules</div>
+                    <p class="config-tile-desc">Comptes et accès</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

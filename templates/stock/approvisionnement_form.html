@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Nouvel approvisionnement — MAGMA{% endblock %}
+
+{% block extra_css %}
+<style>
+.operateur-badge {
+    cursor: pointer;
+    padding: .5rem .9rem;
+    font-size: .85rem;
+    color: #fff;
+    background-color: #6c757d;
+}
+.operateur-badge[data-operateur="wave"]   { background-color: #00CED1; }
+.operateur-badge[data-operateur="orange"] { background-color: #FF6600; }
+.operateur-badge[data-operateur="mtn"]    { background-color: #FFCC00; color: #000; }
+.operateur-badge[data-operateur="moov"]   { background-color: #003366; }
+.form-check-input:checked + .operateur-badge {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 760px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-box-arrow-in-down me-2"></i>Nouvel approvisionnement
+        </div>
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="text-uppercase text-muted small fw-bold mb-2">Produit & fournisseur</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.produit %}
+                        <small class="text-muted" id="stock-actuel-affiche"></small>
+                    </div>
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.fournisseur %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Quantité & prix</div>
+                <div class="row">
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.quantite %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.prix_unitaire %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.date_peremption %}
+                    </div>
+                </div>
+
+                <div class="stat-card mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon-circle accent"><i class="bi bi-cash-stack"></i></div>
+                        <div class="text-start">
+                            <div class="stat-value" id="total-affiche">0 FCFA</div>
+                            <div class="stat-label">Total de l'achat</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Paiement</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.mode_paiement %}
+                    </div>
+                </div>
+                <div class="row" id="operateur-row" style="display:none;">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Opérateur Mobile Money</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for value, label in form.operateur_mobile_money.field.choices %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="operateur_mobile_money"
+                                       id="operateur-{{ value }}" value="{{ value }}"
+                                       {% if form.operateur_mobile_money.value == value %}checked{% endif %}>
+                                <label class="form-check-label badge operateur-badge" for="operateur-{{ value }}"
+                                       data-operateur="{{ value }}">{{ label }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.operateur_mobile_money.errors %}
+                        <div class="text-danger small mt-1">{{ form.operateur_mobile_money.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'stock:mouvement_list' %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer l'approvisionnement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ produits_info|json_script:"produits-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const PRODUITS = JSON.parse(document.getElementById('produits-data').textContent);
+    const produitSelect = document.getElementById('id_produit');
+    const stockAffiche = document.getElementById('stock-actuel-affiche');
+    const quantiteInput = document.getElementById('id_quantite');
+    const prixInput = document.getElementById('id_prix_unitaire');
+    const totalAffiche = document.getElementById('total-affiche');
+
+    function formatFCFA(montant) {
+        const n = Math.round(Number(montant));
+        if (isNaN(n)) { return '0 FCFA'; }
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+    }
+
+    function infoProduitCourant() {
+        return PRODUITS[produitSelect.value];
+    }
+
+    function afficherStock() {
+        const info = infoProduitCourant();
+        stockAffiche.textContent = info ? `Stock actuel : ${info.stock_actuel} ${info.unite}` : '';
+    }
+
+    function preremplirPrix() {
+        const info = infoProduitCourant();
+        if (info) {
+            prixInput.value = info.prix_achat;
+        }
+    }
+
+    function calculerTotal() {
+        const quantite = parseFloat(quantiteInput.value) || 0;
+        const prix = parseFloat(prixInput.value) || 0;
+        totalAffiche.textContent = formatFCFA(quantite * prix);
+    }
+
+    produitSelect.addEventListener('change', function () {
+        afficherStock();
+        preremplirPrix();
+        calculerTotal();
+    });
+    quantiteInput.addEventListener('input', calculerTotal);
+    prixInput.addEventListener('input', calculerTotal);
+
+    afficherStock();
+    if (!prixInput.value) {
+        preremplirPrix();
+    }
+    calculerTotal();
+
+    const modePaiementSelect = document.getElementById('id_mode_paiement');
+    const operateurRow = document.getElementById('operateur-row');
+
+    function toggleOperateur() {
+        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'flex' : 'none';
+    }
+    modePaiementSelect.addEventListener('change', toggleOperateur);
+    toggleOperateur();
+})();
+</script>
+{% endblock %}

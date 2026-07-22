@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Nouvelle vente — MAGMA{% endblock %}
+
+{% block extra_css %}
+<style>
+.operateur-badge {
+    cursor: pointer;
+    padding: .5rem .9rem;
+    font-size: .85rem;
+    color: #fff;
+    background-color: #6c757d;
+}
+.operateur-badge[data-operateur="wave"]   { background-color: #00CED1; }
+.operateur-badge[data-operateur="orange"] { background-color: #FF6600; }
+.operateur-badge[data-operateur="mtn"]    { background-color: #FFCC00; color: #000; }
+.operateur-badge[data-operateur="moov"]   { background-color: #003366; }
+.form-check-input:checked + .operateur-badge {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+}
+.stepper-btn { width: 46px; }
+#ticket-card { position: sticky; top: 20px; }
+.ticket-header { background: var(--color-accent) !important; color: #fff; }
+.ticket-total-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    line-height: 1.1;
+}
+#fiche-produit { display: none; }
+#panier-vide { text-align: center; color: var(--color-text-secondary); padding: 1.5rem 0; }
+.panier-ligne-supprimer {
+    cursor: pointer;
+    color: var(--color-danger);
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <form method="post" id="vente-form">
+        {% csrf_token %}
+        <input type="hidden" name="lignes_json" id="lignes-json">
+        <div class="row">
+            <!-- Colonne gauche : choix du produit -->
+            <div class="col-lg-7 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-cart-plus me-2"></i>Choix du produit
+                    </div>
+                    <div class="card-body p-4">
+                        {% include "comptes/_field.html" with field=form.produit %}
+
+                        <div id="fiche-produit" class="stat-card mb-3">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center gap-2 justify-content-center">
+                                        <div class="stat-icon-circle" id="stock-icon"><i class="bi bi-box-seam-fill"></i></div>
+                                        <div class="text-start">
+                                            <div class="stat-value" id="stock-valeur">0</div>
+                                            <div class="stat-label" id="stock-label">en stock</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small mt-2">Catégorie</div>
+                                    <div class="fw-bold" id="fiche-categorie">—</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Quantité</label>
+                                <div class="input-group input-group-lg mb-1">
+                                    <button type="button" class="btn btn-outline-secondary stepper-btn" id="qte-moins">
+                                        <i class="bi bi-dash-lg"></i>
+                                    </button>
+                                    {{ form.quantite }}
+                                    <button type="button" class="btn btn-outline-secondary stepper-btn" id="qte-plus">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                {% include "comptes/_field.html" with field=form.prix_unitaire %}
+                            </div>
+                        </div>
+                        <div class="text-danger small fw-bold mb-2" id="stock-alerte" style="display:none;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i><span id="stock-alerte-texte"></span>
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary w-100" id="ajouter-panier-btn">
+                            <i class="bi bi-plus-circle me-1"></i>Ajouter au panier
+                        </button>
+
+                        {% if form.non_field_errors %}
+                        <div class="text-danger small mt-3">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite : ticket de vente (panier) -->
+            <div class="col-lg-5">
+                <div class="card" id="ticket-card">
+                    <div class="card-header ticket-header">
+                        <i class="bi bi-receipt me-2"></i>Ticket de vente
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="panier-vide">
+                            <i class="bi bi-cart-x fs-2 d-block mb-2"></i>
+                            Aucun produit ajouté
+                        </div>
+                        <table class="table table-sm" id="panier-table" style="display:none;">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th class="text-end">Qté</th>
+                                    <th class="text-end">Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="panier-lignes"></tbody>
+                        </table>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-3">
+                            <div class="text-muted text-uppercase fw-bold small">Total</div>
+                            <div class="ticket-total-value" id="ticket-total">0 FCFA</div>
+                        </div>
+
+                        <div class="text-uppercase text-muted small fw-bold mb-2">Paiement</div>
+                        {% include "comptes/_field.html" with field=form.mode_paiement %}
+
+                        <div id="operateur-row" style="display:none;">
+                            <label class="form-label">Opérateur Mobile Money</label>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                {% for value, label in form.operateur_mobile_money.field.choices %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="operateur_mobile_money"
+                                           id="operateur-{{ value }}" value="{{ value }}"
+                                           {% if form.operateur_mobile_money.value == value %}checked{% endif %}>
+                                    <label class="form-check-label badge operateur-badge" for="operateur-{{ value }}"
+                                           data-operateur="{{ value }}">{{ label }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.operateur_mobile_money.errors %}
+                            <div class="text-danger small mt-1">{{ form.operateur_mobile_money.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <a href="{% url 'stock:mouvement_list' %}" class="btn btn-danger">
+                                <i class="bi bi-x-lg me-1"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg" id="valider-vente-btn" disabled>
+                                <i class="bi bi-check-lg me-1"></i>Valider la vente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{{ produits_info|json_script:"produits-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const PRODUITS = JSON.parse(document.getElementById('produits-data').textContent);
+    const produitSelect = document.getElementById('id_produit');
+    const quantiteInput = document.getElementById('id_quantite');
+    const prixInput = document.getElementById('id_prix_unitaire');
+    const ficheProduit = document.getElementById('fiche-produit');
+    const stockIcon = document.getElementById('stock-icon');
+    const stockValeur = document.getElementById('stock-valeur');
+    const stockLabel = document.getElementById('stock-label');
+    const ficheCategorie = document.getElementById('fiche-categorie');
+    const stockAlerte = document.getElementById('stock-alerte');
+    const stockAlerteTexte = document.getElementById('stock-alerte-texte');
+    const ajouterBtn = document.getElementById('ajouter-panier-btn');
+    const qteMoins = document.getElementById('qte-moins');
+    const qtePlus = document.getElementById('qte-plus');
+    const panierVide = document.getElementById('panier-vide');
+    const panierTable = document.getElementById('panier-table');
+    const panierLignes = document.getElementById('panier-lignes');
+    const ticketTotal = document.getElementById('ticket-total');
+    const validerBtn = document.getElementById('valider-vente-btn');
+    const ligneJsonInput = document.getElementById('lignes-json');
+    const venteForm = document.getElementById('vente-form');
+
+    let panier = [];
+
+    function formatFCFA(montant) {
+        const n = Math.round(Number(montant));
+        if (isNaN(n)) { return '0 FCFA'; }
+        return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+    }
+
+    function infoProduitCourant() {
+        return PRODUITS[produitSelect.value];
+    }
+
+    function quantiteDejaAuPanier(produitId) {
+        const ligne = panier.find(function (l) { return l.produit_id === produitId; });
+        return ligne ? ligne.quantite : 0;
+    }
+
+    function afficherFicheProduit() {
+        const info = infoProduitCourant();
+        if (!info) {
+            ficheProduit.style.display = 'none';
+            return;
+        }
+        ficheProduit.style.display = 'block';
+        ficheCategorie.textContent = info.categorie;
+        stockValeur.textContent = info.stock_actuel;
+        stockLabel.textContent = info.unite + '(s) en stock';
+
+        stockIcon.classList.remove('accent', 'success', 'warning', 'danger');
+        if (info.stock_actuel <= 0) {
+            stockIcon.classList.add('danger');
+            stockValeur.style.color = 'var(--color-danger)';
+        } else if (info.stock_actuel <= info.seuil_alerte) {
+            stockIcon.classList.add('warning');
+            stockValeur.style.color = 'var(--color-warning)';
+        } else {
+            stockIcon.classList.add('success');
+            stockValeur.style.color = '';
+        }
+    }
+
+    function preremplirPrix() {
+        const info = infoProduitCourant();
+        if (info) {
+            prixInput.value = info.prix_vente;
+        }
+    }
+
+    function verifierStock() {
+        const info = infoProduitCourant();
+        const quantite = parseInt(quantiteInput.value, 10) || 0;
+        if (!info) {
+            stockAlerte.style.display = 'none';
+            ajouterBtn.disabled = false;
+            return;
+        }
+        const disponible = info.stock_actuel - quantiteDejaAuPanier(produitSelect.value);
+        if (info.stock_actuel <= 0) {
+            stockAlerteTexte.textContent = 'Rupture de stock — vente impossible.';
+            stockAlerte.style.display = 'block';
+            ajouterBtn.disabled = true;
+        } else if (quantite > disponible) {
+            stockAlerteTexte.textContent = disponible > 0
+                ? `Stock disponible : ${disponible} ${info.unite.toLowerCase()}(s) (déjà ${quantiteDejaAuPanier(produitSelect.value)} au panier).`
+                : `Vous avez déjà ${quantiteDejaAuPanier(produitSelect.value)} ${info.unite.toLowerCase()}(s) de ce produit au panier (stock max atteint).`;
+            stockAlerte.style.display = 'block';
+            ajouterBtn.disabled = true;
+        } else {
+            stockAlerte.style.display = 'none';
+            ajouterBtn.disabled = false;
+        }
+    }
+
+    function rendreTicket() {
+        if (panier.length === 0) {
+            panierVide.style.display = 'block';
+            panierTable.style.display = 'none';
+            validerBtn.disabled = true;
+        } else {
+            panierVide.style.display = 'none';
+            panierTable.style.display = 'table';
+            validerBtn.disabled = false;
+        }
+
+        panierLignes.innerHTML = panier.map(function (l) {
+            return '<tr>' +
+                '<td>' + l.nom + '<div class="text-muted small">' + formatFCFA(l.prix_unitaire) + ' / unité</div></td>' +
+                '<td class="text-end">' + l.quantite + '</td>' +
+                '<td class="text-end fw-bold">' + formatFCFA(l.quantite * l.prix_unitaire) + '</td>' +
+                '<td class="text-end">' +
+                '<button type="button" class="panier-ligne-supprimer" data-produit-id="' + l.produit_id + '" title="Retirer">' +
+                '<i class="bi bi-x-circle"></i></button></td>' +
+                '</tr>';
+        }).join('');
+
+        const total = panier.reduce(function (acc, l) { return acc + l.quantite * l.prix_unitaire; }, 0);
+        ticketTotal.textContent = formatFCFA(total);
+
+        panierLignes.querySelectorAll('.panier-ligne-supprimer').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                panier = panier.filter(function (l) { return l.produit_id !== btn.dataset.produitId; });
+                rendreTicket();
+                verifierStock();
+            });
+        });
+    }
+
+    function ajouterAuPanier() {
+        const info = infoProduitCourant();
+        if (!info) { return; }
+        const quantite = parseInt(quantiteInput.value, 10) || 0;
+        const prixUnitaire = parseInt(prixInput.value, 10) || 0;
+        if (quantite < 1) { return; }
+
+        const produitId = produitSelect.value;
+        const ligneExistante = panier.find(function (l) { return l.produit_id === produitId; });
+        if (ligneExistante) {
+            ligneExistante.quantite += quantite;
+            ligneExistante.prix_unitaire = prixUnitaire;
+        } else {
+            panier.push({
+                produit_id: produitId,
+                nom: info.nom,
+                quantite: quantite,
+                prix_unitaire: prixUnitaire,
+            });
+        }
+
+        rendreTicket();
+        quantiteInput.value = 1;
+        verifierStock();
+    }
+
+    produitSelect.addEventListener('change', function () {
+        quantiteInput.value = 1;
+        preremplirPrix();
+        afficherFicheProduit();
+        verifierStock();
+    });
+    quantiteInput.addEventListener('input', verifierStock);
+    ajouterBtn.addEventListener('click', ajouterAuPanier);
+
+    qteMoins.addEventListener('click', function () {
+        quantiteInput.value = Math.max(1, (parseInt(quantiteInput.value, 10) || 1) - 1);
+        verifierStock();
+    });
+    qtePlus.addEventListener('click', function () {
+        quantiteInput.value = (parseInt(quantiteInput.value, 10) || 0) + 1;
+        verifierStock();
+    });
+
+    venteForm.addEventListener('submit', function () {
+        ligneJsonInput.value = JSON.stringify(panier.map(function (l) {
+            return { produit_id: l.produit_id, quantite: l.quantite, prix_unitaire: l.prix_unitaire };
+        }));
+    });
+
+    afficherFicheProduit();
+    if (!prixInput.value) {
+        preremplirPrix();
+    }
+    verifierStock();
+    rendreTicket();
+
+    const modePaiementSelect = document.getElementById('id_mode_paiement');
+    const operateurRow = document.getElementById('operateur-row');
+
+    function toggleOperateur() {
+        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'block' : 'none';
+    }
+    modePaiementSelect.addEventListener('change', toggleOperateur);
+    toggleOperateur();
+})();
+</script>
+{% endblock %}

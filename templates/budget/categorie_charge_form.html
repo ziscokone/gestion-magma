@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} une catégorie de charge — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 480px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-tags-fill me-2"></i>{% if object %}Modifier la catégorie{% else %}Ajouter une catégorie{% endif %}
+        </div>
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+                {% include "comptes/_field.html" with field=form.nom %}
+                {% include "comptes/_field.html" with field=form.actif %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'budget:categorie_charge_list' %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

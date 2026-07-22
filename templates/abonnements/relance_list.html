@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Relances — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-6 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle {% if nb_a_relancer %}danger{% else %}success{% endif %}">
+                        <i class="bi bi-telephone-outbound-fill"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="stat-value" style="{% if nb_a_relancer %}color: var(--color-danger);{% endif %}">{{ nb_a_relancer }}</div>
+                        <div class="stat-label">À relancer (≤ {{ jours_filtre }} jours)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle success"><i class="bi bi-check-circle-fill"></i></div>
+                    <div class="text-start">
+                        <div class="stat-value">{{ nb_relances_faites }}</div>
+                        <div class="stat-label">Déjà contactés</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-telephone-outbound-fill me-2"></i>Relances avant expiration
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-auto">
+                    <select name="jours" class="form-select" onchange="this.form.submit()">
+                        <option value="7" {% if jours_filtre == '7' %}selected{% endif %}>Expire dans ≤ 7 jours</option>
+                        <option value="14" {% if jours_filtre == '14' %}selected{% endif %}>Expire dans ≤ 14 jours</option>
+                        <option value="30" {% if jours_filtre == '30' %}selected{% endif %}>Expire dans ≤ 30 jours</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="relance" class="form-select" onchange="this.form.submit()">
+                        <option value="a_faire" {% if relance_filtre == 'a_faire' %}selected{% endif %}>À relancer</option>
+                        <option value="faites" {% if relance_filtre == 'faites' %}selected{% endif %}>Déjà contactés</option>
+                        <option value="tous" {% if relance_filtre == 'tous' %}selected{% endif %}>Tous</option>
+                    </select>
+                </div>
+            </form>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Type</th>
+                        <th>Expire le</th>
+                        <th>Urgence</th>
+                        <th>Statut relance</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for abonnement in abonnements %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'clients:client_detail' abonnement.client.public_id %}">{{ abonnement.client.nom_complet }}</a>
+                            <div>
+                                <a href="tel:{{ abonnement.client.telephone }}" class="text-decoration-none">
+                                    <i class="bi bi-telephone-fill me-1"></i>{{ abonnement.client.telephone }}
+                                </a>
+                            </div>
+                        </td>
+                        <td>{{ abonnement.type_abonnement.nom }}</td>
+                        <td>{{ abonnement.date_fin|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if abonnement.jours_restants <= 3 %}
+                            <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                                {{ abonnement.jours_restants }} j
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background-color: var(--color-warning-light); color: #856404;">
+                                {{ abonnement.jours_restants }} j
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if abonnement.relance_effectuee %}
+                            <span class="badge badge-disponible">
+                                <i class="bi bi-check-circle-fill me-1"></i>Contacté
+                                {% if abonnement.date_relance %}le {{ abonnement.date_relance|date:"d/m/Y" }}{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-reserve"><i class="bi bi-hourglass-split me-1"></i>À faire</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <form method="post" action="{% url 'abonnements:relance_toggle' abonnement.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                {% if abonnement.relance_effectuee %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Remettre en attente">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Marquer comme contacté">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                {% endif %}
+                            </form>
+                            <a href="{% url 'abonnements:abonnement_renew' abonnement.pk %}" class="btn btn-sm btn-outline-primary" title="Renouveler">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucun abonnement à relancer sur cette période.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

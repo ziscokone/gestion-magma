@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Abonnements — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-card-checklist me-2"></i>Abonnements</span>
+            <div>
+                <a href="{% url 'abonnements:relance_list' %}" class="btn btn-sm btn-outline-light me-1">
+                    <i class="bi bi-telephone-outbound-fill me-1"></i>Relances
+                </a>
+                <a href="{% url 'abonnements:abonnement_create' %}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus-lg me-1"></i>Nouvel abonnement
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-auto">
+                    <select name="statut" class="form-select" onchange="this.form.submit()">
+                        <option value="tous" {% if statut_filtre == 'tous' %}selected{% endif %}>Tous les statuts</option>
+                        <option value="actifs" {% if statut_filtre == 'actifs' %}selected{% endif %}>Actifs</option>
+                        <option value="expire_bientot" {% if statut_filtre == 'expire_bientot' %}selected{% endif %}>Expire bientôt (≤ 7 jours)</option>
+                        <option value="expires" {% if statut_filtre == 'expires' %}selected{% endif %}>Expirés</option>
+                    </select>
+                </div>
+                <div class="col-auto flex-grow-1">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher un client..." value="{{ search_query }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Type</th>
+                        <th>Début</th>
+                        <th>Expiration</th>
+                        <th>Paiement</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for abonnement in abonnements %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'clients:client_detail' abonnement.client.public_id %}">
+                                {{ abonnement.client.nom_complet }}
+                            </a>
+                            <div class="text-muted small">{{ abonnement.client.telephone }}</div>
+                        </td>
+                        <td>{{ abonnement.type_abonnement.nom }}</td>
+                        <td>{{ abonnement.date_debut|date:"d/m/Y" }}</td>
+                        <td>{{ abonnement.date_fin|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if abonnement.statut_paiement == 'paye' %}
+                            <span class="badge badge-disponible">Payé</span>
+                            {% elif abonnement.statut_paiement == 'partiel' %}
+                            <span class="badge" style="background-color: var(--color-warning-light); color: #856404;">
+                                Partiel — reste {{ abonnement.montant_restant|fcfa }}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-reserve">En attente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if abonnement.statut == 'expire' %}
+                            <span class="badge badge-reserve">Expiré</span>
+                            {% elif abonnement.expire_bientot %}
+                            <span class="badge" style="background-color: var(--color-warning-light); color: #856404;">
+                                Expire dans {{ abonnement.jours_restants }} j
+                            </span>
+                            {% else %}
+                            <span class="badge badge-disponible">Actif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'abonnements:abonnement_detail' abonnement.pk %}" class="btn btn-sm btn-outline-primary" title="Détail">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'abonnements:abonnement_renew' abonnement.pk %}" class="btn btn-sm btn-outline-primary" title="Renouveler">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Aucun abonnement.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

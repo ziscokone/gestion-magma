@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Produits — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3">
+        <div class="col-md-3 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle accent"><i class="bi bi-box-seam-fill"></i></div>
+                    <div class="text-start">
+                        <div class="stat-value">{{ nb_produits }}</div>
+                        <div class="stat-label">Produits actifs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle {% if nb_stock_faible %}danger{% else %}success{% endif %}">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="stat-value" style="{% if nb_stock_faible %}color: var(--color-danger);{% endif %}">{{ nb_stock_faible }}</div>
+                        <div class="stat-label">En stock faible</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle {% if nb_stock_epuise %}danger{% else %}success{% endif %}">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="stat-value" style="{% if nb_stock_epuise %}color: var(--color-danger);{% endif %}">{{ nb_stock_epuise }}</div>
+                        <div class="stat-label">Stock épuisé</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle success"><i class="bi bi-cash-stack"></i></div>
+                    <div class="text-start">
+                        <div class="stat-value">{{ valeur_totale_stock|fcfa }}</div>
+                        <div class="stat-label">Valeur du stock</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-box-seam me-2"></i>Produits</span>
+            <div>
+                <a href="{% url 'stock:produit_inventaire_pdf' %}?{{ request.GET.urlencode }}" target="_blank" class="btn btn-sm btn-outline-light me-1" title="Imprimer la liste d'inventaire (respecte les filtres actifs)">
+                    <i class="bi bi-printer me-1"></i>Imprimer l'inventaire
+                </a>
+                <a href="{% url 'stock:mouvement_list' %}" class="btn btn-sm btn-outline-light me-1">
+                    <i class="bi bi-arrow-left-right me-1"></i>Mouvements
+                </a>
+                {% if user.has_global_access %}
+                <a href="{% url 'stock:produit_create' %}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus-lg me-1"></i>Ajouter
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-auto">
+                    <select name="stock" class="form-select" onchange="this.form.submit()">
+                        <option value="tous" {% if stock_filtre == 'tous' %}selected{% endif %}>Tous les stocks</option>
+                        <option value="faible" {% if stock_filtre == 'faible' %}selected{% endif %}>Stock faible</option>
+                        <option value="epuise" {% if stock_filtre == 'epuise' %}selected{% endif %}>Stock épuisé</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select name="categorie" class="form-select" onchange="this.form.submit()">
+                        <option value="toutes" {% if categorie_filtre == 'toutes' %}selected{% endif %}>Toutes les catégories</option>
+                        {% for categorie in categories %}
+                        <option value="{{ categorie.pk }}" {% if categorie_filtre == categorie.pk|stringformat:"s" %}selected{% endif %}>{{ categorie.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto flex-grow-1">
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher un produit..." value="{{ search_query }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Catégorie</th>
+                        <th>Prix achat</th>
+                        <th>Prix vente</th>
+                        <th>Stock actuel</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produit in produits %}
+                    <tr>
+                        <td><a href="{% url 'stock:produit_detail' produit.pk %}">{{ produit.nom }}</a></td>
+                        <td>{{ produit.categorie.nom }}</td>
+                        <td>{{ produit.prix_achat|fcfa }}</td>
+                        <td>{% if produit.prix_vente %}{{ produit.prix_vente|fcfa }}{% else %}—{% endif %}</td>
+                        <td>
+                            {% if produit.stock_faible %}
+                            <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ produit.stock_actuel }} {{ produit.get_unite_display }} — faible
+                            </span>
+                            {% else %}
+                            <span class="badge badge-disponible">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{ produit.stock_actuel }} {{ produit.get_unite_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if user.has_global_access %}
+                            <a href="{% url 'stock:produit_update' produit.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucun produit.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

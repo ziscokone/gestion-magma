@@ -1,0 +1,60 @@
+{% load pagination_tags %}
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pagination-zone mt-3">
+    <div class="pagination-info">
+        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+        &nbsp;·&nbsp;
+        {{ page_obj.paginator.count }} élément{{ page_obj.paginator.count|pluralize }} au total
+    </div>
+
+    <ul class="c-pagination">
+        {% if page_obj.has_previous %}
+        <li>
+            <a class="page-btn" href="{% paginate_url page_obj.previous_page_number param_name|default:'page' %}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% else %}
+        <li><span class="page-btn disabled"><i class="bi bi-chevron-left"></i></span></li>
+        {% endif %}
+
+        {% if page_obj.number > 3 %}
+        <li><a class="page-btn" href="{% paginate_url 1 param_name|default:'page' %}">1</a></li>
+        {% if page_obj.number > 4 %}
+        <li><span class="page-btn dots">…</span></li>
+        {% endif %}
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                {% if page_obj.number == num %}
+                <li><span class="page-btn active">{{ num }}</span></li>
+                {% else %}
+                <li><a class="page-btn" href="{% paginate_url num param_name|default:'page' %}">{{ num }}</a></li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-3" %}
+        <li><span class="page-btn dots">…</span></li>
+        {% endif %}
+        <li>
+            <a class="page-btn" href="{% paginate_url page_obj.paginator.num_pages param_name|default:'page' %}">
+                {{ page_obj.paginator.num_pages }}
+            </a>
+        </li>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+        <li>
+            <a class="page-btn" href="{% paginate_url page_obj.next_page_number param_name|default:'page' %}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        {% else %}
+        <li><span class="page-btn disabled"><i class="bi bi-chevron-right"></i></span></li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}

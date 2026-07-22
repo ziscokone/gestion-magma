@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Catégories de charge — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-tags-fill me-2"></i>Catégories de charge</span>
+            <a href="{% url 'budget:categorie_charge_create' %}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-lg me-1"></i>Ajouter
+            </a>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for categorie in categories_charge %}
+                    <tr>
+                        <td>{{ categorie.nom }}</td>
+                        <td>
+                            {% if categorie.actif %}
+                            <span class="badge badge-disponible">Actif</span>
+                            {% else %}
+                            <span class="badge badge-reserve">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'budget:categorie_charge_update' categorie.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'budget:categorie_charge_delete' categorie.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">Aucune catégorie de charge.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

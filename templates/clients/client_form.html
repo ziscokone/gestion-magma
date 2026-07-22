@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Compléter le profil — {{ object.nom_complet }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 760px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-person-lines-fill me-2"></i>Compléter le profil — {{ object.nom_complet }}
+        </div>
+        <div class="card-body p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="text-uppercase text-muted small fw-bold mb-2">Identité</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.nom_complet %}
+                    </div>
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.telephone %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Profil</div>
+                <div class="row">
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.sexe %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.date_naissance %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.objectif %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Contact d'urgence</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.contact_urgence_nom %}
+                    </div>
+                    <div class="col-md-6">
+                        {% include "comptes/_field.html" with field=form.contact_urgence_telephone %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Santé</div>
+                {% include "comptes/_field.html" with field=form.antecedents_medicaux %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'clients:client_detail' object.public_id %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

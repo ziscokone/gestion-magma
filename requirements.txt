@@ -1,0 +1,8 @@
+Django>=5.2,<6.0
+python-dotenv>=1.0
+Pillow>=10.0
+reportlab>=4.0.0
+openpyxl>=3.1.0
+
+# Sécurité
+django-axes>=8.0

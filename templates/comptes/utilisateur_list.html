@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Utilisateurs — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-people-fill me-2"></i>Utilisateurs</span>
+            {% if user.has_global_access %}
+            <a href="{% url 'comptes:utilisateur_create' %}" class="btn btn-sm btn-success">
+                <i class="bi bi-plus-lg me-1"></i>Ajouter
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-3">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ search_query }}">
+            </form>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom complet</th>
+                        <th>Identifiant</th>
+                        <th>Rôle</th>
+                        <th>Téléphone</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in utilisateurs %}
+                    <tr>
+                        <td>{{ u.nom_complet }}</td>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.get_role_display }}</td>
+                        <td>{{ u.telephone|default:"—" }}</td>
+                        <td>
+                            {% if u.actif %}
+                            <span class="badge badge-disponible">Actif</span>
+                            {% else %}
+                            <span class="badge badge-reserve">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if user.has_global_access %}
+                            <a href="{% url 'comptes:utilisateur_modules' u.pk %}" class="btn btn-sm btn-outline-primary" title="Modules autorisés">
+                                <i class="bi bi-grid"></i>
+                            </a>
+                            <a href="{% url 'comptes:utilisateur_update' u.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucun utilisateur.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

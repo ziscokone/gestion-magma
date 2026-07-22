@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer un type d'abonnement — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 480px; margin: 0 auto;">
+        <div class="card-header">
+            <i class="bi bi-exclamation-triangle me-2"></i>Confirmer la suppression
+        </div>
+        <div class="card-body">
+            <p>Supprimer définitivement <strong>{{ object.nom }}</strong> ?</p>
+            <p class="text-muted small">
+                Si des abonnements existent déjà avec ce type, la suppression sera refusée —
+                désactivez-le plutôt depuis le formulaire de modification.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="bi bi-trash me-1"></i>Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
