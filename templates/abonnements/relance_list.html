@@ -36,16 +36,16 @@
             <i class="bi bi-telephone-outbound-fill me-2"></i>Relances avant expiration
         </div>
         <div class="card-body">
-            <form method="get" class="row g-2 mb-3">
+            <form method="get" class="row g-2 mb-3 filter-bar">
                 <div class="col-auto">
-                    <select name="jours" class="form-select" onchange="this.form.submit()">
+                    <select name="jours" class="filter-select" onchange="this.form.submit()">
                         <option value="7" {% if jours_filtre == '7' %}selected{% endif %}>Expire dans ≤ 7 jours</option>
                         <option value="14" {% if jours_filtre == '14' %}selected{% endif %}>Expire dans ≤ 14 jours</option>
                         <option value="30" {% if jours_filtre == '30' %}selected{% endif %}>Expire dans ≤ 30 jours</option>
                     </select>
                 </div>
                 <div class="col-auto">
-                    <select name="relance" class="form-select" onchange="this.form.submit()">
+                    <select name="relance" class="filter-select" onchange="this.form.submit()">
                         <option value="a_faire" {% if relance_filtre == 'a_faire' %}selected{% endif %}>À relancer</option>
                         <option value="faites" {% if relance_filtre == 'faites' %}selected{% endif %}>Déjà contactés</option>
                         <option value="tous" {% if relance_filtre == 'tous' %}selected{% endif %}>Tous</option>

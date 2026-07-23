@@ -18,6 +18,7 @@
                     <tr>
                         <th>Nom</th>
                         <th>Prix</th>
+                        <th>Durée</th>
                         <th>Statut</th>
                         <th></th>
                     </tr>
@@ -27,6 +28,7 @@
                     <tr>
                         <td>{{ type.nom }}</td>
                         <td>{{ type.prix|fcfa }}</td>
+                        <td>{{ type.duree_minutes|duree }}</td>
                         <td>
                             {% if type.actif %}
                             <span class="badge badge-disponible">Actif</span>

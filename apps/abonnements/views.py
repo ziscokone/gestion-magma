@@ -14,9 +14,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 
 from core.mixins import AdminRequiredMixin
 from apps.clients.models import Client
-from .forms import AbonnementForm, PaiementAbonnementForm, TypeAbonnementForm
-from .models import Abonnement, PaiementAbonnement, TypeAbonnement
-from .pdf import generer_fiche_abonnement_pdf, generer_recu_versement_pdf
+from .forms import AbonnementForm, TypeAbonnementForm
+from .models import Abonnement, TypeAbonnement
+from .pdf import generer_fiche_abonnement_pdf
 
 
 class AbonnementListView(LoginRequiredMixin, ListView):
@@ -93,16 +93,6 @@ class AbonnementCreateView(LoginRequiredMixin, View):
                 montant=type_abonnement.prix,
                 enregistre_par=request.user,
             )
-
-            montant_verse = form.cleaned_data.get('montant_verse') or 0
-            if montant_verse > 0:
-                PaiementAbonnement.objects.create(
-                    abonnement=abonnement,
-                    montant=montant_verse,
-                    mode_paiement=form.cleaned_data['mode_paiement'],
-                    operateur_mobile_money=form.cleaned_data['operateur_mobile_money'],
-                    enregistre_par=request.user,
-                )
 
             messages.success(request, f"Abonnement enregistré pour {client.nom_complet}.")
             return redirect('abonnements:abonnement_detail', pk=abonnement.pk)
@@ -186,34 +176,6 @@ class AbonnementDetailView(LoginRequiredMixin, DetailView):
     template_name = 'abonnements/abonnement_detail.html'
     context_object_name = 'abonnement'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['paiements'] = self.object.paiements.all()
-        context['paiement_form'] = PaiementAbonnementForm(abonnement=self.object)
-        return context
-
-
-class AbonnementPaiementCreateView(LoginRequiredMixin, View):
-    """Enregistre un nouveau versement sur un abonnement existant."""
-
-    def post(self, request, pk):
-        abonnement = get_object_or_404(Abonnement, pk=pk)
-        form = PaiementAbonnementForm(request.POST, abonnement=abonnement)
-        if form.is_valid():
-            PaiementAbonnement.objects.create(
-                abonnement=abonnement,
-                montant=form.cleaned_data['montant'],
-                mode_paiement=form.cleaned_data['mode_paiement'],
-                operateur_mobile_money=form.cleaned_data['operateur_mobile_money'],
-                enregistre_par=request.user,
-            )
-            messages.success(request, "Versement enregistré avec succès.")
-        else:
-            for field_errors in form.errors.values():
-                for error in field_errors:
-                    messages.error(request, error)
-        return redirect('abonnements:abonnement_detail', pk=pk)
-
 
 class TypeAbonnementListView(AdminRequiredMixin, ListView):
     """Configuration des types d'abonnement (nom, prix, durée) — Super Admin / Manager."""
@@ -263,22 +225,11 @@ class TypeAbonnementDeleteView(AdminRequiredMixin, DeleteView):
 
 
 class AbonnementFichePDFView(LoginRequiredMixin, View):
-    """Fiche PDF complète de l'abonnement (historique des versements inclus)."""
+    """Reçu PDF de l'abonnement (paiement unique)."""
 
     def get(self, request, pk):
         abonnement = get_object_or_404(Abonnement, pk=pk)
         buffer = generer_fiche_abonnement_pdf(abonnement)
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="{abonnement.numero_recu}.pdf"'
-        return response
-
-
-class PaiementRecuPDFView(LoginRequiredMixin, View):
-    """Petit reçu PDF pour un versement précis."""
-
-    def get(self, request, pk, paiement_pk):
-        paiement = get_object_or_404(PaiementAbonnement, pk=paiement_pk, abonnement_id=pk)
-        buffer = generer_recu_versement_pdf(paiement)
-        response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'inline; filename="{paiement.numero_recu}.pdf"'
         return response

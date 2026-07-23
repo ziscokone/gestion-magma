@@ -13,10 +13,11 @@ class TypePrestationChoiceField(forms.ModelChoiceField):
 class TypePrestationForm(NomUniqueMixin, forms.ModelForm):
     class Meta:
         model = TypePrestation
-        fields = ['nom', 'prix', 'actif']
+        fields = ['nom', 'prix', 'duree_minutes', 'actif']
         widgets = {
             'nom': forms.TextInput(attrs={'class': 'form-control'}),
             'prix': forms.NumberInput(attrs={'class': 'form-control'}),
+            'duree_minutes': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'placeholder': 'minutes'}),
             'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -25,17 +26,22 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = [
-            'nom_complet', 'telephone',
+            'nom_complet', 'telephone', 'photo_cni',
             'sexe', 'date_naissance', 'objectif',
+            'taille', 'poids', 'bassin',
             'contact_urgence_nom', 'contact_urgence_telephone',
             'antecedents_medicaux',
         ]
         widgets = {
             'nom_complet': forms.TextInput(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
+            'photo_cni': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'sexe': forms.Select(attrs={'class': 'form-select'}),
             'date_naissance': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'objectif': forms.Select(attrs={'class': 'form-select'}),
+            'taille': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'cm'}),
+            'poids': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': '0.1', 'placeholder': 'kg'}),
+            'bassin': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'cm'}),
             'contact_urgence_nom': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_urgence_telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'antecedents_medicaux': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),

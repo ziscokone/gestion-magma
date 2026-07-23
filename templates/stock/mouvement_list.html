@@ -21,20 +21,21 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="get" class="row g-2 mb-3">
+            <form method="get" class="row g-2 mb-3 filter-bar">
                 <div class="col-auto">
-                    <select name="type" class="form-select" onchange="this.form.submit()">
+                    <select name="type" class="filter-select" onchange="this.form.submit()">
                         <option value="tous" {% if type_filtre == 'tous' %}selected{% endif %}>Tous les mouvements</option>
                         <option value="entree" {% if type_filtre == 'entree' %}selected{% endif %}>Entrées</option>
                         <option value="sortie" {% if type_filtre == 'sortie' %}selected{% endif %}>Sorties</option>
                     </select>
                 </div>
-                <div class="col-auto flex-grow-1">
-                    <input type="text" name="q" class="form-control" placeholder="Rechercher un produit..." value="{{ search_query }}">
+                <div class="col-auto flex-grow-1 filter-search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="q" class="filter-search" placeholder="Rechercher un produit..." value="{{ search_query }}">
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="bi bi-search me-1"></i>Filtrer
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        Filtrer
                     </button>
                 </div>
             </form>

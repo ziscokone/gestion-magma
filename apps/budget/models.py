@@ -62,8 +62,8 @@ class OperationBudget(ModePaiementMixin, models.Model):
         'clients.Seance', on_delete=models.CASCADE, null=True, blank=True,
         related_name='operations_budget'
     )
-    paiement_abonnement = models.ForeignKey(
-        'abonnements.PaiementAbonnement', on_delete=models.CASCADE, null=True, blank=True,
+    abonnement = models.ForeignKey(
+        'abonnements.Abonnement', on_delete=models.CASCADE, null=True, blank=True,
         related_name='operations_budget'
     )
     mouvement_stock = models.ForeignKey(
@@ -90,14 +90,14 @@ class OperationBudget(ModePaiementMixin, models.Model):
 
     @property
     def est_automatique(self):
-        return bool(self.seance_id or self.paiement_abonnement_id or self.mouvement_stock_id or self.vente_id)
+        return bool(self.seance_id or self.abonnement_id or self.mouvement_stock_id or self.vente_id)
 
     @property
     def lien_source(self):
         if self.seance_id:
             return reverse('clients:client_detail', kwargs={'public_id': self.seance.client.public_id})
-        if self.paiement_abonnement_id:
-            return reverse('abonnements:abonnement_detail', kwargs={'pk': self.paiement_abonnement.abonnement_id})
+        if self.abonnement_id:
+            return reverse('abonnements:abonnement_detail', kwargs={'pk': self.abonnement_id})
         if self.vente_id:
             return reverse('stock:vente_confirmation', kwargs={'pk': self.vente_id})
         if self.mouvement_stock_id:

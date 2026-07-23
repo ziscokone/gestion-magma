@@ -12,6 +12,22 @@ def format_fcfa(value):
     return f"{formatted} FCFA"
 
 
+def format_duree(minutes):
+    """Formate une durée en minutes de façon lisible : 90 -> '1h30', 60 -> '1h', 20 -> '20 min'."""
+    if minutes is None or minutes == '':
+        return minutes
+    try:
+        minutes = int(minutes)
+    except (TypeError, ValueError):
+        return minutes
+    heures, reste = divmod(minutes, 60)
+    if heures and reste:
+        return f"{heures}h{reste:02d}"
+    if heures:
+        return f"{heures}h"
+    return f"{reste} min"
+
+
 _UNITES = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf']
 _DIX_A_DIX_NEUF = ['dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize',
                    'dix-sept', 'dix-huit', 'dix-neuf']

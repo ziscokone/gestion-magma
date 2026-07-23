@@ -2,26 +2,6 @@
 
 {% block title %}Nouvel abonnement — MAGMA{% endblock %}
 
-{% block extra_css %}
-<style>
-.operateur-badge {
-    cursor: pointer;
-    padding: .5rem .9rem;
-    font-size: .85rem;
-    color: #fff;
-    background-color: #6c757d;
-}
-.operateur-badge[data-operateur="wave"]   { background-color: #00CED1; }
-.operateur-badge[data-operateur="orange"] { background-color: #FF6600; }
-.operateur-badge[data-operateur="mtn"]    { background-color: #FFCC00; color: #000; }
-.operateur-badge[data-operateur="moov"]   { background-color: #003366; }
-.form-check-input:checked + .operateur-badge {
-    outline: 3px solid var(--color-accent);
-    outline-offset: 1px;
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container">
     <div class="card" style="max-width: 760px; margin: 0 auto;">
@@ -31,7 +11,7 @@
         <div class="card-body p-4">
             {% if renouvellement %}
             <div class="alert alert-info">
-                <i class="bi bi-arrow-repeat me-2"></i>Renouvellement pré-rempli — vérifiez le mode de paiement puis enregistrez.
+                <i class="bi bi-arrow-repeat me-2"></i>Renouvellement pré-rempli — vérifiez les informations puis enregistrez.
             </div>
             {% endif %}
             <form method="post">
@@ -61,38 +41,8 @@
                     </div>
                 </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Versement initial (optionnel)</div>
-                <p class="text-muted small mb-2">
-                    Le paiement d'un abonnement peut être fractionné en plusieurs fois — laisse ce
-                    champ vide si le client ne paie rien aujourd'hui, tu pourras ajouter des
-                    versements plus tard depuis la fiche de l'abonnement.
-                </p>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.montant_verse %}
-                    </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.mode_paiement %}
-                    </div>
-                </div>
-                <div class="row" id="operateur-row" style="display:none;">
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label">Opérateur Mobile Money</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            {% for value, label in form.operateur_mobile_money.field.choices %}
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="operateur_mobile_money"
-                                       id="operateur-{{ value }}" value="{{ value }}"
-                                       {% if form.operateur_mobile_money.value == value %}checked{% endif %}>
-                                <label class="form-check-label badge operateur-badge" for="operateur-{{ value }}"
-                                       data-operateur="{{ value }}">{{ label }}</label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% if form.operateur_mobile_money.errors %}
-                        <div class="text-danger small mt-1">{{ form.operateur_mobile_money.errors }}</div>
-                        {% endif %}
-                    </div>
+                <div class="alert alert-secondary mt-2">
+                    <i class="bi bi-cash-coin me-2"></i>Paiement intégral en espèces à la souscription, montant : <span class="fw-bold" id="prix-paiement"></span>.
                 </div>
 
                 <div class="d-flex justify-content-between mt-3">
@@ -120,6 +70,7 @@
     const typeSelect = document.getElementById('id_type_abonnement');
     const dateDebutInput = document.getElementById('id_date_debut');
     const prixAffiche = document.getElementById('prix-affiche');
+    const prixPaiement = document.getElementById('prix-paiement');
     const dateFinAffichee = document.getElementById('date-fin-affichee');
 
     function formatFCFA(montant) {
@@ -130,8 +81,9 @@
 
     function afficherPrixEtDateFin() {
         const info = TYPES[typeSelect.value];
-        if (!info) { prixAffiche.textContent = ''; dateFinAffichee.textContent = ''; return; }
+        if (!info) { prixAffiche.textContent = ''; prixPaiement.textContent = ''; dateFinAffichee.textContent = ''; return; }
         prixAffiche.textContent = formatFCFA(info.prix);
+        prixPaiement.textContent = formatFCFA(info.prix);
         if (dateDebutInput.value) {
             const debut = new Date(dateDebutInput.value + 'T00:00:00');
             const fin = new Date(debut.getTime() + info.duree_jours * 24 * 60 * 60 * 1000);
@@ -141,15 +93,6 @@
     typeSelect.addEventListener('change', afficherPrixEtDateFin);
     dateDebutInput.addEventListener('change', afficherPrixEtDateFin);
     afficherPrixEtDateFin();
-
-    const modePaiementSelect = document.getElementById('id_mode_paiement');
-    const operateurRow = document.getElementById('operateur-row');
-
-    function toggleOperateur() {
-        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'flex' : 'none';
-    }
-    modePaiementSelect.addEventListener('change', toggleOperateur);
-    toggleOperateur();
 
     const suggestionsBox = document.getElementById('client-suggestions');
 

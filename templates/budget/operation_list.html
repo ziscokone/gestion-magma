@@ -67,16 +67,16 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="get" class="row g-2 mb-3">
+            <form method="get" class="row g-2 mb-3 filter-bar">
                 <div class="col-auto">
-                    <select name="type" class="form-select" onchange="this.form.submit()">
+                    <select name="type" class="filter-select" onchange="this.form.submit()">
                         <option value="tous" {% if type_filtre == 'tous' %}selected{% endif %}>Tous les types</option>
                         <option value="entree" {% if type_filtre == 'entree' %}selected{% endif %}>Entrées</option>
                         <option value="sortie" {% if type_filtre == 'sortie' %}selected{% endif %}>Sorties</option>
                     </select>
                 </div>
                 <div class="col-auto">
-                    <select name="categorie" class="form-select" onchange="this.form.submit()">
+                    <select name="categorie" class="filter-select" onchange="this.form.submit()">
                         <option value="toutes" {% if categorie_filtre == 'toutes' %}selected{% endif %}>Toutes les catégories</option>
                         {% for value, label in categories %}
                         <option value="{{ value }}" {% if categorie_filtre == value %}selected{% endif %}>{{ label }}</option>

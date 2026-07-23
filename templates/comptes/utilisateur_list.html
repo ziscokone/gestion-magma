@@ -14,8 +14,9 @@
             {% endif %}
         </div>
         <div class="card-body">
-            <form method="get" class="mb-3">
-                <input type="text" name="q" class="form-control" placeholder="Rechercher..." value="{{ search_query }}">
+            <form method="get" class="mb-3 filter-search-wrap" style="max-width: 420px;">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="filter-search" placeholder="Rechercher..." value="{{ search_query }}">
             </form>
             <table class="table">
                 <thead>

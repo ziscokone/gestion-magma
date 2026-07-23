@@ -20,7 +20,7 @@ from .models import CategorieCharge, OperationBudget
 def _operations_filtrees(request):
     """Filtre partagé par la liste et l'export « filtre actif »."""
     queryset = OperationBudget.objects.select_related(
-        'categorie_charge', 'seance__client', 'paiement_abonnement__abonnement__client', 'mouvement_stock__produit'
+        'categorie_charge', 'seance__client', 'abonnement__client', 'mouvement_stock__produit'
     ).all()
     type_operation = request.GET.get('type', 'tous')
     if type_operation in ('entree', 'sortie'):

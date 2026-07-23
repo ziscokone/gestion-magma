@@ -17,8 +17,17 @@
                 </div>
                 <div class="card-body">
                     <div class="text-uppercase text-muted small fw-bold mb-2">Identité</div>
-                    <p class="mb-2"><strong>Nom complet</strong><br>{{ client.nom_complet }}</p>
-                    <p class="mb-2"><strong>Téléphone</strong><br>{{ client.telephone }}</p>
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <p class="mb-2"><strong>Nom complet</strong><br>{{ client.nom_complet }}</p>
+                            <p class="mb-2"><strong>Téléphone</strong><br>{{ client.telephone }}</p>
+                        </div>
+                        {% if client.photo_cni %}
+                        <a href="{{ client.photo_cni.url }}" target="_blank" class="photo-thumb flex-shrink-0" title="Voir la pièce d'identité en grand">
+                            <img src="{{ client.photo_cni.url }}" alt="Pièce d'identité">
+                        </a>
+                        {% endif %}
+                    </div>
 
                     {% if client.sexe or client.date_naissance or client.objectif %}
                     <div class="text-uppercase text-muted small fw-bold mb-2 mt-3">Profil</div>
@@ -33,6 +42,30 @@
                     {% endif %}
                     {% endif %}
 
+                    {% if client.taille or client.poids or client.bassin %}
+                    <div class="text-uppercase text-muted small fw-bold mb-2 mt-3">Mensurations</div>
+                    <div class="row text-center g-2">
+                        <div class="col-4">
+                            <div class="stat-card py-2">
+                                <div class="stat-value" style="font-size:1.1rem;">{{ client.taille|default:"—" }}{% if client.taille %} cm{% endif %}</div>
+                                <div class="stat-label">Taille</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-card py-2">
+                                <div class="stat-value" style="font-size:1.1rem;">{{ client.poids|default:"—" }}{% if client.poids %} kg{% endif %}</div>
+                                <div class="stat-label">Poids</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-card py-2">
+                                <div class="stat-value" style="font-size:1.1rem;">{{ client.bassin|default:"—" }}{% if client.bassin %} cm{% endif %}</div>
+                                <div class="stat-label">Bassin</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% if client.contact_urgence_nom %}
                     <div class="text-uppercase text-muted small fw-bold mb-2 mt-3">Contact d'urgence</div>
                     <p class="mb-2">{{ client.contact_urgence_nom }} — {{ client.contact_urgence_telephone }}</p>
@@ -43,9 +76,9 @@
                     <p class="mb-0">{{ client.antecedents_medicaux|linebreaksbr }}</p>
                     {% endif %}
 
-                    {% if not client.sexe and not client.date_naissance and not client.objectif and not client.contact_urgence_nom and not client.antecedents_medicaux %}
+                    {% if not client.sexe and not client.date_naissance and not client.objectif and not client.taille and not client.poids and not client.bassin and not client.contact_urgence_nom and not client.antecedents_medicaux and not client.photo_cni %}
                     <p class="text-muted small mt-3 mb-0">
-                        <i class="bi bi-info-circle me-1"></i>Profil incomplet — clique sur « Compléter le profil » pour ajouter le sexe, l'objectif, le contact d'urgence...
+                        <i class="bi bi-info-circle me-1"></i>Profil incomplet — clique sur « Compléter le profil » pour ajouter le sexe, l'objectif, les mensurations, le contact d'urgence...
                     </p>
                     {% endif %}
                 </div>
@@ -141,7 +174,7 @@
                                 <th>Type</th>
                                 <th>Début</th>
                                 <th>Expiration</th>
-                                <th>Paiement</th>
+                                <th>Montant</th>
                                 <th>Statut</th>
                                 <th></th>
                             </tr>
@@ -154,17 +187,7 @@
                                 </td>
                                 <td>{{ abonnement.date_debut|date:"d/m/Y" }}</td>
                                 <td>{{ abonnement.date_fin|date:"d/m/Y" }}</td>
-                                <td>
-                                    {% if abonnement.statut_paiement == 'paye' %}
-                                    <span class="badge badge-disponible">Payé</span>
-                                    {% elif abonnement.statut_paiement == 'partiel' %}
-                                    <span class="badge" style="background-color: var(--color-warning-light); color: #856404;">
-                                        Partiel — reste {{ abonnement.montant_restant|fcfa }}
-                                    </span>
-                                    {% else %}
-                                    <span class="badge badge-reserve">En attente</span>
-                                    {% endif %}
-                                </td>
+                                <td>{{ abonnement.montant|fcfa }}</td>
                                 <td>
                                     {% if abonnement.statut == 'expire' %}
                                     <span class="badge badge-reserve">Expiré</span>

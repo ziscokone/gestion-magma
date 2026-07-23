@@ -12,11 +12,14 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         {% include "comptes/_field.html" with field=form.nom %}
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         {% include "comptes/_field.html" with field=form.prix %}
+                    </div>
+                    <div class="col-md-3">
+                        {% include "comptes/_field.html" with field=form.duree_minutes %}
                     </div>
                 </div>
                 {% include "comptes/_field.html" with field=form.actif %}

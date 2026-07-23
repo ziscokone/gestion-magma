@@ -26,9 +26,15 @@ class Client(models.Model):
     sexe = models.CharField(max_length=1, choices=SEXE_CHOICES, blank=True, verbose_name="Sexe")
     date_naissance = models.DateField(null=True, blank=True, verbose_name="Date de naissance")
     objectif = models.CharField(max_length=30, choices=OBJECTIF_CHOICES, blank=True, verbose_name="Objectif sportif")
+
+    taille = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Taille (cm)")
+    poids = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True, verbose_name="Poids (kg)")
+    bassin = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="Tour de bassin (cm)")
+
     contact_urgence_nom = models.CharField(max_length=200, blank=True, verbose_name="Contact d'urgence — Nom")
     contact_urgence_telephone = models.CharField(max_length=20, blank=True, verbose_name="Contact d'urgence — Téléphone")
     antecedents_medicaux = models.TextField(blank=True, verbose_name="Antécédents médicaux / contre-indications")
+    photo_cni = models.ImageField(upload_to='clients/cni/', blank=True, null=True, verbose_name="Photo de la pièce d'identité (CNI)")
 
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
@@ -59,6 +65,7 @@ class TypePrestation(models.Model):
     cle = models.SlugField(max_length=50, unique=True, blank=True, null=True, verbose_name="Clé technique")
     nom = models.CharField(max_length=100, verbose_name="Nom")
     prix = models.PositiveIntegerField(verbose_name="Prix (FCFA)")
+    duree_minutes = models.PositiveIntegerField(default=30, verbose_name="Durée (minutes)")
     ordre = models.PositiveSmallIntegerField(default=0, verbose_name="Ordre d'affichage")
     actif = models.BooleanField(default=True, verbose_name="Actif")
 

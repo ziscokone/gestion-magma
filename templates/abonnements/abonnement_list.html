@@ -18,21 +18,22 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="get" class="row g-2 mb-3">
+            <form method="get" class="row g-2 mb-3 filter-bar">
                 <div class="col-auto">
-                    <select name="statut" class="form-select" onchange="this.form.submit()">
+                    <select name="statut" class="filter-select" onchange="this.form.submit()">
                         <option value="tous" {% if statut_filtre == 'tous' %}selected{% endif %}>Tous les statuts</option>
                         <option value="actifs" {% if statut_filtre == 'actifs' %}selected{% endif %}>Actifs</option>
                         <option value="expire_bientot" {% if statut_filtre == 'expire_bientot' %}selected{% endif %}>Expire bientôt (≤ 7 jours)</option>
                         <option value="expires" {% if statut_filtre == 'expires' %}selected{% endif %}>Expirés</option>
                     </select>
                 </div>
-                <div class="col-auto flex-grow-1">
-                    <input type="text" name="q" class="form-control" placeholder="Rechercher un client..." value="{{ search_query }}">
+                <div class="col-auto flex-grow-1 filter-search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="q" class="filter-search" placeholder="Rechercher un client..." value="{{ search_query }}">
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="bi bi-search me-1"></i>Filtrer
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        Filtrer
                     </button>
                 </div>
             </form>
@@ -44,7 +45,7 @@
                         <th>Type</th>
                         <th>Début</th>
                         <th>Expiration</th>
-                        <th>Paiement</th>
+                        <th>Montant</th>
                         <th>Statut</th>
                         <th></th>
                     </tr>
@@ -61,17 +62,7 @@
                         <td>{{ abonnement.type_abonnement.nom }}</td>
                         <td>{{ abonnement.date_debut|date:"d/m/Y" }}</td>
                         <td>{{ abonnement.date_fin|date:"d/m/Y" }}</td>
-                        <td>
-                            {% if abonnement.statut_paiement == 'paye' %}
-                            <span class="badge badge-disponible">Payé</span>
-                            {% elif abonnement.statut_paiement == 'partiel' %}
-                            <span class="badge" style="background-color: var(--color-warning-light); color: #856404;">
-                                Partiel — reste {{ abonnement.montant_restant|fcfa }}
-                            </span>
-                            {% else %}
-                            <span class="badge badge-reserve">En attente</span>
-                            {% endif %}
-                        </td>
+                        <td>{{ abonnement.montant|fcfa }}</td>
                         <td>
                             {% if abonnement.statut == 'expire' %}
                             <span class="badge badge-reserve">Expiré</span>

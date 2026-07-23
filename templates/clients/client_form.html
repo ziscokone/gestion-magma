@@ -9,7 +9,7 @@
             <i class="bi bi-person-lines-fill me-2"></i>Compléter le profil — {{ object.nom_complet }}
         </div>
         <div class="card-body p-4">
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 <div class="text-uppercase text-muted small fw-bold mb-2">Identité</div>
@@ -19,6 +19,34 @@
                     </div>
                     <div class="col-md-6">
                         {% include "comptes/_field.html" with field=form.telephone %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Pièce d'identité</div>
+                <div class="row align-items-center mb-3">
+                    <div class="col-auto">
+                        <label for="{{ form.photo_cni.id_for_label }}" class="photo-preview mb-0" role="button">
+                            {% if object.photo_cni %}
+                            <img src="{{ object.photo_cni.url }}" alt="Photo CNI" id="photo-cni-preview">
+                            {% else %}
+                            <img src="" alt="Photo CNI" id="photo-cni-preview" style="display:none;">
+                            <span id="photo-cni-placeholder" class="photo-preview-placeholder">
+                                <i class="bi bi-person-vcard"></i>
+                            </span>
+                            {% endif %}
+                            <span class="photo-preview-overlay"><i class="bi bi-camera-fill"></i></span>
+                        </label>
+                    </div>
+                    <div class="col">
+                        <div class="visually-hidden">{{ form.photo_cni }}</div>
+                        <label for="{{ form.photo_cni.id_for_label }}" class="btn btn-sm btn-outline-primary rounded-pill mb-1" role="button">
+                            <i class="bi bi-upload me-1"></i>{% if object.photo_cni %}Changer la photo{% else %}Ajouter une photo{% endif %}
+                        </label>
+                        <div class="form-text mb-0" id="photo-cni-filename">
+                            {% if object.photo_cni %}Fichier actuel : {{ object.photo_cni.name|cut:"clients/cni/" }}{% else %}Aucun fichier sélectionné.{% endif %}
+                        </div>
+                        <div class="form-text">Photo ou scan lisible de la CNI (ou autre pièce d'identité).</div>
+                        {% if form.photo_cni.errors %}<div class="text-danger small mt-1">{{ form.photo_cni.errors }}</div>{% endif %}
                     </div>
                 </div>
 
@@ -32,6 +60,19 @@
                     </div>
                     <div class="col-md-4">
                         {% include "comptes/_field.html" with field=form.objectif %}
+                    </div>
+                </div>
+
+                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Mensurations</div>
+                <div class="row">
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.taille %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.poids %}
+                    </div>
+                    <div class="col-md-4">
+                        {% include "comptes/_field.html" with field=form.bassin %}
                     </div>
                 </div>
 
@@ -60,4 +101,29 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const input = document.getElementById('{{ form.photo_cni.id_for_label }}');
+    const preview = document.getElementById('photo-cni-preview');
+    const placeholder = document.getElementById('photo-cni-placeholder');
+    const filename = document.getElementById('photo-cni-filename');
+    if (!input || !preview) { return; }
+
+    input.addEventListener('change', function () {
+        const file = input.files && input.files[0];
+        if (!file) { return; }
+        if (filename) { filename.textContent = 'Fichier sélectionné : ' + file.name; }
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) { placeholder.style.display = 'none'; }
+        };
+        reader.readAsDataURL(file);
+    });
+})();
+</script>
 {% endblock %}

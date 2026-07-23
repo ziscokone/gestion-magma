@@ -3,26 +3,6 @@
 
 {% block title %}Abonnement — {{ abonnement.client.nom_complet }} — MAGMA{% endblock %}
 
-{% block extra_css %}
-<style>
-.operateur-badge {
-    cursor: pointer;
-    padding: .5rem .9rem;
-    font-size: .85rem;
-    color: #fff;
-    background-color: #6c757d;
-}
-.operateur-badge[data-operateur="wave"]   { background-color: #00CED1; }
-.operateur-badge[data-operateur="orange"] { background-color: #FF6600; }
-.operateur-badge[data-operateur="mtn"]    { background-color: #FFCC00; color: #000; }
-.operateur-badge[data-operateur="moov"]   { background-color: #003366; }
-.form-check-input:checked + .operateur-badge {
-    outline: 3px solid var(--color-accent);
-    outline-offset: 1px;
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container">
     <div class="row">
@@ -31,7 +11,7 @@
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-card-checklist me-2"></i>Abonnement</span>
-                    <a href="{% url 'abonnements:abonnement_fiche_pdf' abonnement.pk %}" target="_blank" class="btn btn-sm btn-outline-light" title="Prévisualiser la fiche PDF">
+                    <a href="{% url 'abonnements:abonnement_fiche_pdf' abonnement.pk %}" target="_blank" class="btn btn-sm btn-outline-light" title="Prévisualiser le reçu PDF">
                         <i class="bi bi-file-earmark-pdf"></i>
                     </a>
                 </div>
@@ -64,140 +44,39 @@
                     <i class="bi bi-cash-coin me-2"></i>Paiement
                 </div>
                 <div class="card-body">
-                    <div class="stat-card mb-2">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon-circle accent"><i class="bi bi-cash-stack"></i></div>
-                            <div class="text-start">
-                                <div class="stat-value">{{ abonnement.montant|fcfa }}</div>
-                                <div class="stat-label">Prix total</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card mb-2">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon-circle success"><i class="bi bi-wallet2"></i></div>
-                            <div class="text-start">
-                                <div class="stat-value">{{ abonnement.montant_paye|fcfa }}</div>
-                                <div class="stat-label">Payé</div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="stat-card mb-3">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon-circle {% if abonnement.montant_restant > 0 %}danger{% else %}success{% endif %}">
-                                <i class="bi {% if abonnement.montant_restant > 0 %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %}"></i>
-                            </div>
+                            <div class="stat-icon-circle success"><i class="bi bi-cash-stack"></i></div>
                             <div class="text-start">
-                                <div class="stat-value">{{ abonnement.montant_restant|fcfa }}</div>
-                                <div class="stat-label">Reste</div>
+                                <div class="stat-value">{{ abonnement.montant|fcfa }}</div>
+                                <div class="stat-label">Payé en espèces le {{ abonnement.date_souscription|date:"d/m/Y" }}</div>
                             </div>
                         </div>
                     </div>
                     <p class="mb-0">
-                        {% if abonnement.statut_paiement == 'paye' %}
                         <span class="badge badge-disponible">Payé intégralement</span>
-                        {% elif abonnement.statut_paiement == 'partiel' %}
-                        <span class="badge" style="background-color: var(--color-warning-light); color: #856404;">Partiellement payé</span>
-                        {% else %}
-                        <span class="badge badge-reserve">En attente</span>
-                        {% endif %}
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Colonne droite : historique + ajout de versement -->
+        <!-- Colonne droite : reçu -->
         <div class="col-lg-8">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <i class="bi bi-clock-history me-2"></i>Historique des versements
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Montant</th>
-                                <th>Mode de paiement</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for paiement in paiements %}
-                            <tr>
-                                <td>{{ paiement.date|date:"d/m/Y H:i" }}</td>
-                                <td>{{ paiement.montant|fcfa }}</td>
-                                <td>{{ paiement.mode_paiement_affiche }}</td>
-                                <td class="text-end">
-                                    <a href="{% url 'abonnements:paiement_recu_pdf' abonnement.pk paiement.pk %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Prévisualiser le reçu PDF">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted py-4">Aucun versement enregistré.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {% if abonnement.montant_restant > 0 %}
             <div class="card">
                 <div class="card-header">
-                    <i class="bi bi-plus-circle me-2"></i>Enregistrer un versement
+                    <i class="bi bi-receipt me-2"></i>Reçu
                 </div>
                 <div class="card-body">
-                    <form method="post" action="{% url 'abonnements:abonnement_paiement_create' abonnement.pk %}">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                {% include "comptes/_field.html" with field=paiement_form.montant %}
-                                <small class="text-muted">Maximum : {{ abonnement.montant_restant|fcfa }} (reste à payer)</small>
-                            </div>
-                            <div class="col-md-6">
-                                {% include "comptes/_field.html" with field=paiement_form.mode_paiement %}
-                            </div>
-                        </div>
-                        <div class="row" id="operateur-row" style="display:none;">
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Opérateur Mobile Money</label>
-                                <div class="d-flex flex-wrap gap-2">
-                                    {% for value, label in paiement_form.operateur_mobile_money.field.choices %}
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="operateur_mobile_money"
-                                               id="operateur-{{ value }}" value="{{ value }}">
-                                        <label class="form-check-label badge operateur-badge" for="operateur-{{ value }}"
-                                               data-operateur="{{ value }}">{{ label }}</label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-lg me-1"></i>Enregistrer le versement
-                        </button>
-                    </form>
+                    <p class="mb-3">
+                        N° <strong>{{ abonnement.numero_recu }}</strong> — {{ abonnement.montant|fcfa }}, réglé en espèces
+                        le {{ abonnement.date_souscription|date:"d/m/Y" }}.
+                    </p>
+                    <a href="{% url 'abonnements:abonnement_fiche_pdf' abonnement.pk %}" target="_blank" class="btn btn-outline-primary">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Voir / imprimer le reçu PDF
+                    </a>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function () {
-    const modePaiementSelect = document.getElementById('id_paiement_mode');
-    const operateurRow = document.getElementById('operateur-row');
-    if (!modePaiementSelect) { return; }
-
-    function toggleOperateur() {
-        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'flex' : 'none';
-    }
-    modePaiementSelect.addEventListener('change', toggleOperateur);
-    toggleOperateur();
-})();
-</script>
 {% endblock %}

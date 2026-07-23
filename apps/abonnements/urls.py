@@ -16,7 +16,5 @@ urlpatterns = [
 
     path('<int:pk>/', views.AbonnementDetailView.as_view(), name='abonnement_detail'),
     path('<int:pk>/renouveler/', views.AbonnementRenewView.as_view(), name='abonnement_renew'),
-    path('<int:pk>/paiement/', views.AbonnementPaiementCreateView.as_view(), name='abonnement_paiement_create'),
     path('<int:pk>/fiche.pdf', views.AbonnementFichePDFView.as_view(), name='abonnement_fiche_pdf'),
-    path('<int:pk>/paiement/<int:paiement_pk>/recu.pdf', views.PaiementRecuPDFView.as_view(), name='paiement_recu_pdf'),
 ]

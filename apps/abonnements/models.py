@@ -1,10 +1,7 @@
 from datetime import date, timedelta
 
 from django.db import models
-from django.db.models import Sum
-from django.utils import timezone
 
-from core.models import ModePaiementMixin
 from core.utils import format_fcfa
 from apps.clients.models import Client
 
@@ -33,17 +30,9 @@ class TypeAbonnement(models.Model):
 
 class Abonnement(models.Model):
     """
-    Le paiement d'un abonnement peut être fractionné en plusieurs versements
-    (voir `PaiementAbonnement`) : il n'y a donc pas de mode de paiement ou de
-    statut de paiement figé ici, seulement le prix total dû. Le montant payé,
-    le reste à payer et le statut (en attente / partiel / payé) se déduisent
-    des versements liés.
+    Souscription payée en une seule fois, en espèces, à la création — pas de
+    paiement fractionné ni d'autre mode de paiement pour ce module.
     """
-    STATUT_PAIEMENT_CHOICES = [
-        ('en_attente', 'En attente'),
-        ('partiel', 'Partiellement payé'),
-        ('paye', 'Payé intégralement'),
-    ]
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='abonnements', verbose_name="Client")
     type_abonnement = models.ForeignKey(
@@ -92,26 +81,6 @@ class Abonnement(models.Model):
         return self.statut == 'actif' and 0 <= self.jours_restants <= jours
 
     @property
-    def montant_paye(self):
-        return self.paiements.aggregate(total=Sum('montant'))['total'] or 0
-
-    @property
-    def montant_restant(self):
-        return self.montant - self.montant_paye
-
-    @property
-    def statut_paiement(self):
-        if self.montant_paye <= 0:
-            return 'en_attente'
-        if self.montant_paye >= self.montant:
-            return 'paye'
-        return 'partiel'
-
-    @property
-    def statut_paiement_display(self):
-        return dict(self.STATUT_PAIEMENT_CHOICES)[self.statut_paiement]
-
-    @property
     def numero_recu(self):
         """Numéro de reçu façon facture : MAGMA-AAAA-MM-NNNNN, séquence qui
         repart à 1 chaque mois (calculé à la volée, pas stocké)."""
@@ -122,28 +91,3 @@ class Abonnement(models.Model):
             pk__lte=self.pk,
         ).count()
         return f"MAGMA-{d.year}-{d.month:02d}-{rang:05d}"
-
-
-class PaiementAbonnement(ModePaiementMixin, models.Model):
-    """Un versement (paiement partiel ou total) sur un abonnement."""
-    abonnement = models.ForeignKey(Abonnement, on_delete=models.CASCADE, related_name='paiements', verbose_name="Abonnement")
-    montant = models.PositiveIntegerField(verbose_name="Montant versé")
-    date = models.DateTimeField(default=timezone.now, verbose_name="Date du versement")
-    enregistre_par = models.ForeignKey(
-        'comptes.Utilisateur', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='paiements_abonnements_enregistres', verbose_name="Enregistré par"
-    )
-
-    class Meta:
-        verbose_name = "Paiement d'abonnement"
-        verbose_name_plural = "Paiements d'abonnement"
-        ordering = ['date']
-
-    def __str__(self):
-        return f"{self.abonnement} — {format_fcfa(self.montant)} ({self.date:%d/%m/%Y})"
-
-    @property
-    def numero_recu(self):
-        """Rattaché au numéro de reçu de l'abonnement : MAGMA-...-NNNNN-V{rang}."""
-        rang = self.abonnement.paiements.filter(pk__lte=self.pk).count()
-        return f"{self.abonnement.numero_recu}-V{rang}"

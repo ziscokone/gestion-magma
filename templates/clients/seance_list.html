@@ -13,13 +13,13 @@
             </a>
         </div>
         <div class="card-body">
-            <form method="get" class="row g-2 mb-3">
+            <form method="get" class="row g-2 mb-3 filter-bar">
                 <div class="col-auto">
-                    <input type="date" name="date" class="form-control" value="{{ date_filtre }}">
+                    <input type="date" name="date" class="filter-input" value="{{ date_filtre }}">
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="bi bi-search me-1"></i>Filtrer
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        Filtrer
                     </button>
                 </div>
                 <div class="col-auto ms-auto">
@@ -36,6 +36,7 @@
                         <th>Date</th>
                         <th>Client</th>
                         <th>Prestation</th>
+                        <th>Décompte</th>
                         <th>Montant</th>
                         <th>Paiement</th>
                         <th>Statut</th>
@@ -52,6 +53,11 @@
                             <div class="text-muted small">{{ seance.client.telephone }}</div>
                         </td>
                         <td>{{ seance.type_prestation.nom }}</td>
+                        <td>
+                            <span class="countdown" data-debut="{{ seance.date|date:'c' }}" data-duree="{{ seance.type_prestation.duree_minutes }}">
+                                &mdash;
+                            </span>
+                        </td>
                         <td>{{ seance.montant|fcfa }}</td>
                         <td>{{ seance.mode_paiement_affiche }}</td>
                         <td>
@@ -63,7 +69,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune séance pour cette date.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4">Aucune séance pour cette date.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -72,4 +78,42 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const SEUIL_ALERTE_SECONDES = 5 * 60;
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+        document.querySelectorAll('.countdown[data-duree]').forEach(function (el) {
+            const dureeMinutes = parseInt(el.dataset.duree, 10);
+            if (!dureeMinutes) { el.textContent = '—'; return; }
+
+            const debut = new Date(el.dataset.debut);
+            const fin = new Date(debut.getTime() + dureeMinutes * 60000);
+            const diffSecondes = Math.floor((fin - new Date()) / 1000);
+
+            if (diffSecondes <= 0) {
+                el.textContent = 'Terminée';
+                el.classList.remove('countdown-warning');
+                el.classList.add('countdown-done');
+                return;
+            }
+
+            const h = Math.floor(diffSecondes / 3600);
+            const m = Math.floor((diffSecondes % 3600) / 60);
+            const s = diffSecondes % 60;
+            el.textContent = h > 0 ? (h + ':' + pad(m) + ':' + pad(s)) : (pad(m) + ':' + pad(s));
+            el.classList.remove('countdown-done');
+            el.classList.toggle('countdown-warning', diffSecondes <= SEUIL_ALERTE_SECONDES);
+        });
+    }
+
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>
 {% endblock %}

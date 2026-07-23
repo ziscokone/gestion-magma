@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from apps.clients.models import Seance
-from apps.abonnements.models import PaiementAbonnement
+from apps.abonnements.models import Abonnement
 from apps.stock.models import MouvementStock
 from .models import OperationBudget
 
@@ -30,7 +30,7 @@ def creer_recette_seance(sender, instance, **kwargs):
     )
 
 
-@receiver(post_save, sender=PaiementAbonnement)
+@receiver(post_save, sender=Abonnement)
 def creer_recette_abonnement(sender, instance, created, **kwargs):
     if not created:
         return
@@ -38,9 +38,8 @@ def creer_recette_abonnement(sender, instance, created, **kwargs):
         type_operation='entree',
         categorie='recette_abonnement',
         montant=instance.montant,
-        mode_paiement=instance.mode_paiement,
-        operateur_mobile_money=instance.operateur_mobile_money,
-        paiement_abonnement=instance,
+        mode_paiement='especes',
+        abonnement=instance,
         enregistre_par=instance.enregistre_par,
     )
 
