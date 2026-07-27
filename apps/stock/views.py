@@ -280,7 +280,10 @@ class VenteCreateView(LoginRequiredMixin, View):
     def _parser_panier(brut):
         """Valide le panier soumis en JSON : renvoie (lignes, message_erreur).
         `lignes` est une liste de tuples (produit, quantite, prix_unitaire),
-        avec les quantités du même produit déjà fusionnées côté JS."""
+        avec les quantités du même produit déjà fusionnées côté JS. Le prix
+        n'est jamais pris depuis le JSON envoyé par le navigateur — il est
+        toujours recalculé depuis la fiche produit, pour qu'il reste
+        impossible de vendre à un prix différent du catalogue."""
         try:
             lignes_json = json.loads(brut) if brut else []
         except (ValueError, TypeError):
@@ -294,7 +297,7 @@ class VenteCreateView(LoginRequiredMixin, View):
             try:
                 produit = Produit.objects.get(pk=ligne['produit_id'], actif=True)
                 quantite = int(ligne['quantite'])
-                prix_unitaire = int(ligne['prix_unitaire'])
+                prix_unitaire = produit.prix_vente or 0
             except (Produit.DoesNotExist, KeyError, TypeError, ValueError):
                 return [], "Panier invalide — merci de réessayer."
 

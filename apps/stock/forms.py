@@ -124,7 +124,8 @@ class VenteForm(forms.Form):
     prix_unitaire = forms.IntegerField(
         min_value=0,
         label="Prix de vente unitaire (FCFA)",
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_prix_unitaire'}),
+        help_text="Prix catalogue — non modifiable depuis cet écran.",
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_prix_unitaire', 'readonly': True}),
     )
     mode_paiement = forms.ChoiceField(
         choices=MouvementStock.MODE_PAIEMENT_CHOICES,
