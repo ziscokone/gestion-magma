@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Vérification carte de membre — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <div class="card" style="max-width: 420px; width: 100%;">
+            <div class="card-header text-center">
+                <i class="bi bi-patch-check-fill me-2"></i>Vérification carte de membre
+            </div>
+            <div class="card-body text-center py-4">
+                {% if abonnement.statut == 'expire' %}
+                    <i class="bi bi-x-circle-fill" style="font-size: 3rem; color: var(--color-danger);"></i>
+                    <h4 class="mt-3 mb-1">Abonnement expiré</h4>
+                {% else %}
+                    <i class="bi bi-check-circle-fill" style="font-size: 3rem; color: var(--color-success);"></i>
+                    <h4 class="mt-3 mb-1">Abonnement actif</h4>
+                {% endif %}
+
+                <p class="text-muted mb-4">{{ abonnement.client.nom_complet }}</p>
+
+                <div class="text-start mx-auto" style="max-width: 280px;">
+                    <p class="mb-2"><strong>N° d'abonnement</strong><br>{{ abonnement.numero_recu }}</p>
+                    <p class="mb-2"><strong>Type</strong><br>{{ abonnement.type_abonnement.nom }}</p>
+                    <p class="mb-0">
+                        <strong>Période</strong><br>
+                        Du {{ abonnement.date_debut|date:"d/m/Y" }} au {{ abonnement.date_fin|date:"d/m/Y" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,7 +14,10 @@ urlpatterns = [
     path('types/<int:pk>/modifier/', views.TypeAbonnementUpdateView.as_view(), name='type_abonnement_update'),
     path('types/<int:pk>/supprimer/', views.TypeAbonnementDeleteView.as_view(), name='type_abonnement_delete'),
 
+    path('carte/<uuid:public_id>/', views.AbonnementVerifierView.as_view(), name='abonnement_verifier'),
+
     path('<int:pk>/', views.AbonnementDetailView.as_view(), name='abonnement_detail'),
     path('<int:pk>/renouveler/', views.AbonnementRenewView.as_view(), name='abonnement_renew'),
     path('<int:pk>/fiche.pdf', views.AbonnementFichePDFView.as_view(), name='abonnement_fiche_pdf'),
+    path('<int:pk>/carte.png', views.AbonnementCarteImageView.as_view(), name='abonnement_carte_image'),
 ]

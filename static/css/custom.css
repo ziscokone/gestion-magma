@@ -10,8 +10,12 @@
     --color-bg-card: #FFFFFF;
     --color-text-primary: #343A40;
     --color-text-secondary: #6C757D;
-    --color-accent: #1e3260;
-    --color-accent-hover: #162550;
+    --color-accent: #386745;
+    --color-accent-hover: #2a4e33;
+    --color-accent-rgb: 56, 103, 69;
+    --color-secondary: #FDF7E5;
+    --color-hover: #F46722;
+    --color-hover-dark: #be501a;
 
     /* Couleurs de statut */
     --color-success: #5D8A66;
@@ -70,7 +74,7 @@ a {
 }
 
 a:hover {
-    color: var(--color-accent-hover);
+    color: var(--color-hover);
     text-decoration: underline;
 }
 
@@ -111,18 +115,18 @@ a:hover {
 
 .nav-link:hover {
     color: #FFFFFF !important;
-    background-color: #E67E22;
+    background-color: var(--color-hover);
 }
 
 .nav-link.active {
     color: #FFFFFF !important;
-    background-color: #E67E22;
+    background-color: var(--color-hover);
     font-weight: 700;
 }
 
 .navbar .dropdown:hover > .nav-link,
 .navbar .nav-item:hover > .nav-link {
-    background-color: #E67E22;
+    background-color: var(--color-hover);
 }
 
 .nav-link i {
@@ -161,7 +165,7 @@ a:hover {
 
 .navbar .dropdown-item:hover,
 .navbar .dropdown-item:focus {
-    background-color: #E67E22;
+    background-color: var(--color-hover);
     color: #FFFFFF;
 }
 
@@ -244,8 +248,8 @@ a:hover {
 }
 
 .btn-primary:hover {
-    background-color: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
+    background-color: var(--color-hover);
+    border-color: var(--color-hover);
 }
 
 .btn-success {
@@ -279,14 +283,27 @@ a:hover {
     border-color: #B04D4D;
 }
 
+.btn-accent {
+    background-color: var(--color-hover);
+    border-color: var(--color-hover);
+    color: #FFFFFF;
+}
+
+.btn-accent:hover {
+    background-color: var(--color-hover-dark);
+    border-color: var(--color-hover-dark);
+    color: #FFFFFF;
+}
+
 .btn-outline-primary {
     color: var(--color-accent);
     border-color: var(--color-accent);
 }
 
 .btn-outline-primary:hover {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
+    background-color: var(--color-hover);
+    border-color: var(--color-hover);
+    color: #FFFFFF;
 }
 
 /* ==========================================================================
@@ -305,7 +322,7 @@ a:hover {
 .form-control:focus,
 .form-select:focus {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(30, 50, 96, 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15);
 }
 
 .form-label {
@@ -354,7 +371,7 @@ a:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(30, 50, 96, 0.55);
+    background: rgba(var(--color-accent-rgb), 0.55);
     color: #fff;
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -454,7 +471,7 @@ a:hover {
     outline: none;
     border-color: var(--color-accent);
     background-color: var(--color-bg-card);
-    box-shadow: 0 0 0 3px rgba(30, 50, 96, 0.12);
+    box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.12);
 }
 
 .filter-search-wrap {
@@ -501,7 +518,7 @@ a:hover {
 }
 
 .table tbody tr:hover {
-    background-color: rgba(30, 50, 96, 0.03);
+    background-color: rgba(var(--color-accent-rgb), 0.03);
 }
 
 /* ==========================================================================
@@ -579,7 +596,7 @@ a:hover {
 }
 
 .bg-accent-light {
-    background-color: rgba(30, 50, 96, 0.1);
+    background-color: rgba(var(--color-accent-rgb), 0.1);
 }
 
 .border-accent {
@@ -740,7 +757,7 @@ small, .small {
     flex-shrink: 0;
 }
 
-.stat-icon-circle.accent  { background: linear-gradient(135deg, #5b82c0, var(--color-accent)); }
+.stat-icon-circle.accent  { background: linear-gradient(135deg, rgba(var(--color-accent-rgb), 0.55), var(--color-accent)); }
 .stat-icon-circle.success { background: linear-gradient(135deg, #2ecc71, #1a9e55); }
 .stat-icon-circle.danger  { background: linear-gradient(135deg, #e05b52, #b52b22); }
 .stat-icon-circle.warning { background: linear-gradient(135deg, #f0914e, #c75f1e); }

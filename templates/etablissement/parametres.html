@@ -4,33 +4,114 @@
 
 {% block content %}
 <div class="container">
-    <div class="card" style="max-width: 560px; margin: 0 auto;">
-        <div class="card-header">
-            <i class="bi bi-building-gear me-2"></i>Paramètres de l'établissement
-        </div>
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {% for field in form %}
-                {% if field.field.widget.input_type == 'checkbox' %}
-                <div class="form-check mb-3">
-                    {{ field }}
-                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+    <div style="max-width: 980px; margin: 0 auto;">
+        <h4 class="mb-3"><i class="bi bi-building-gear me-2"></i>Paramètres de l'établissement</h4>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-4">
+
+                <div class="col-lg-6 d-flex flex-column gap-4">
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-building me-2"></i>Identité</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-7">
+                                    <label class="form-label" for="{{ form.nom.id_for_label }}">{{ form.nom.label }}</label>
+                                    {{ form.nom }}
+                                    {% if form.nom.errors %}<div class="text-danger small mt-1">{{ form.nom.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label" for="{{ form.slogan.id_for_label }}">{{ form.slogan.label }}</label>
+                                    {{ form.slogan }}
+                                    {% if form.slogan.errors %}<div class="text-danger small mt-1">{{ form.slogan.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="{{ form.logo.id_for_label }}">{{ form.logo.label }}</label>
+                                    {{ form.logo }}
+                                    {% if form.logo.errors %}<div class="text-danger small mt-1">{{ form.logo.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-geo-alt me-2"></i>Coordonnées</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label" for="{{ form.adresse.id_for_label }}">{{ form.adresse.label }}</label>
+                                    {{ form.adresse }}
+                                    {% if form.adresse.errors %}<div class="text-danger small mt-1">{{ form.adresse.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.telephone.id_for_label }}">{{ form.telephone.label }}</label>
+                                    {{ form.telephone }}
+                                    {% if form.telephone.errors %}<div class="text-danger small mt-1">{{ form.telephone.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                {% else %}
-                <div class="mb-3">
-                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+
+                <div class="col-lg-6 d-flex flex-column gap-4">
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-palette me-2"></i>Charte graphique</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-4 text-center">
+                                    <label class="form-label d-block" for="{{ form.couleur_principale.id_for_label }}">{{ form.couleur_principale.label }}</label>
+                                    {{ form.couleur_principale }}
+                                    {% if form.couleur_principale.errors %}<div class="text-danger small mt-1">{{ form.couleur_principale.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-4 text-center">
+                                    <label class="form-label d-block" for="{{ form.couleur_secondaire.id_for_label }}">{{ form.couleur_secondaire.label }}</label>
+                                    {{ form.couleur_secondaire }}
+                                    {% if form.couleur_secondaire.errors %}<div class="text-danger small mt-1">{{ form.couleur_secondaire.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-4 text-center">
+                                    <label class="form-label d-block" for="{{ form.couleur_accent.id_for_label }}">{{ form.couleur_accent.label }}</label>
+                                    {{ form.couleur_accent }}
+                                    {% if form.couleur_accent.errors %}<div class="text-danger small mt-1">{{ form.couleur_accent.errors }}</div>{% endif %}
+                                </div>
+                                <div class="col-12">
+                                    <p class="text-muted small mb-0">
+                                        Principale : navigation, boutons, en-têtes PDF. Secondaire : texte sur fond de couleur principale (ex. slogan). Accent : survol des menus et boutons.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-cash-coin me-2"></i>Finances</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label" for="{{ form.solde_initial_caisse.id_for_label }}">{{ form.solde_initial_caisse.label }}</label>
+                                    {{ form.solde_initial_caisse }}
+                                    <div class="form-text">{{ form.solde_initial_caisse.help_text }}</div>
+                                    {% if form.solde_initial_caisse.errors %}<div class="text-danger small mt-1">{{ form.solde_initial_caisse.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                {% endif %}
-                {% endfor %}
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-check-lg me-1"></i>Enregistrer
-                </button>
-            </form>
-        </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-4">
+                <i class="bi bi-check-lg me-1"></i>Enregistrer
+            </button>
+        </form>
     </div>
 </div>
 {% endblock %}

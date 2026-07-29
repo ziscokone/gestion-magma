@@ -13,7 +13,9 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from core.mixins import AdminRequiredMixin
+from core.qr import qr_code_data_uri
 from apps.clients.models import Client
+from .carte import generer_carte_abonnement_png
 from .forms import AbonnementForm, TypeAbonnementForm
 from .models import Abonnement, TypeAbonnement
 from .pdf import generer_fiche_abonnement_pdf
@@ -176,6 +178,25 @@ class AbonnementDetailView(LoginRequiredMixin, DetailView):
     template_name = 'abonnements/abonnement_detail.html'
     context_object_name = 'abonnement'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['carte_qr_data_uri'] = qr_code_data_uri(self.object.texte_carte_membre, taille_px=160)
+        return context
+
+
+class AbonnementVerifierView(DetailView):
+    """Page publique (sans connexion) de vérification d'un abonnement par son
+    identifiant public : confirme que l'abonnement est actif, sans exposer
+    d'autres données personnelles (téléphone, dossier médical, pièce
+    d'identité...). Non liée au QR code de la carte de membre (qui encode
+    directement le texte de vérification, sans passer par une page web),
+    mais garde une URL de vérification disponible si besoin."""
+    model = Abonnement
+    template_name = 'abonnements/abonnement_verifier.html'
+    context_object_name = 'abonnement'
+    slug_field = 'public_id'
+    slug_url_kwarg = 'public_id'
+
 
 class TypeAbonnementListView(AdminRequiredMixin, ListView):
     """Configuration des types d'abonnement (nom, prix, durée) — Super Admin / Manager."""
@@ -232,4 +253,17 @@ class AbonnementFichePDFView(LoginRequiredMixin, View):
         buffer = generer_fiche_abonnement_pdf(abonnement)
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="{abonnement.numero_recu}.pdf"'
+        return response
+
+
+class AbonnementCarteImageView(LoginRequiredMixin, View):
+    """Carte de membre au format image (PNG), avec QR encodant directement
+    le numéro d'abonnement, le nom du client et la période de validité —
+    présentable directement à l'écran du téléphone, sans lecteur PDF."""
+
+    def get(self, request, pk):
+        abonnement = get_object_or_404(Abonnement, pk=pk)
+        buffer = generer_carte_abonnement_png(abonnement)
+        response = HttpResponse(buffer, content_type='image/png')
+        response['Content-Disposition'] = f'inline; filename="carte-{abonnement.client.nom_complet}.png"'
         return response

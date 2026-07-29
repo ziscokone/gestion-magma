@@ -1,3 +1,24 @@
+def hex_vers_rgb(couleur_hex):
+    """Convertit une couleur hexa ('#386745') en tuple RGB (56, 103, 69).
+    Retourne (0, 0, 0) si la valeur est vide ou mal formée."""
+    couleur_hex = (couleur_hex or '').lstrip('#')
+    if len(couleur_hex) != 6:
+        return (0, 0, 0)
+    try:
+        return tuple(int(couleur_hex[i:i + 2], 16) for i in (0, 2, 4))
+    except ValueError:
+        return (0, 0, 0)
+
+
+def assombrir_couleur(couleur_hex, facteur=0.22):
+    """Assombrit une couleur hexa de `facteur` (0-1). Sert à dériver l'état
+    :hover d'une couleur de marque configurable, sans champ supplémentaire
+    à gérer dans les paramètres établissement."""
+    r, g, b = hex_vers_rgb(couleur_hex)
+    r, g, b = (max(0, int(c * (1 - facteur))) for c in (r, g, b))
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+
 def format_fcfa(value):
     """Formate un montant en FCFA avec séparateur de milliers : 15000 -> '15 000 FCFA'.
     Utilisé à la fois par le filtre de template `fcfa` et par le code Python

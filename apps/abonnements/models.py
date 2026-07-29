@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, timedelta
 
 from django.db import models
@@ -34,6 +35,11 @@ class Abonnement(models.Model):
     paiement fractionné ni d'autre mode de paiement pour ce module.
     """
 
+    public_id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True, db_index=True,
+        verbose_name="Identifiant public",
+        help_text="Utilisé dans l'URL de vérification de la carte de membre (QR code), pour ne pas exposer l'ID interne."
+    )
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='abonnements', verbose_name="Client")
     type_abonnement = models.ForeignKey(
         TypeAbonnement, on_delete=models.PROTECT, related_name='abonnements', verbose_name="Type d'abonnement"
@@ -91,3 +97,14 @@ class Abonnement(models.Model):
             pk__lte=self.pk,
         ).count()
         return f"MAGMA-{d.year}-{d.month:02d}-{rang:05d}"
+
+    @property
+    def texte_carte_membre(self):
+        """Texte encodé dans le QR code de la carte de membre : numéro
+        d'abonnement, nom complet et période de validité, lisible directement
+        au scan sans passer par une page web."""
+        return (
+            f"N° {self.numero_recu}\n"
+            f"{self.client.nom_complet}\n"
+            f"Valable du {self.date_debut:%d/%m/%Y} au {self.date_fin:%d/%m/%Y}"
+        )

@@ -9,7 +9,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from core.pdf import ACCENT, BORDER, ROW_ALT, badge_mode_paiement, bandeau_entete, pied_de_page
+from core.pdf import BORDER, ROW_ALT, badge_mode_paiement, bandeau_entete, get_couleur_principale, pied_de_page
 from core.utils import format_fcfa
 
 LARGEUR = 170 * mm
@@ -26,6 +26,7 @@ def generer_inventaire_pdf(produits, libelle_filtre):
     )
     styles = getSampleStyleSheet()
     elements = []
+    couleur_principale = get_couleur_principale()
 
     elements.append(bandeau_entete(
         LARGEUR,
@@ -56,7 +57,7 @@ def generer_inventaire_pdf(produits, libelle_filtre):
 
     table = Table(data, colWidths=[45 * mm, 35 * mm, 30 * mm, 30 * mm, 30 * mm], repeatRows=1)
     style = [
-        ('BACKGROUND', (0, 0), (-1, 0), ACCENT),
+        ('BACKGROUND', (0, 0), (-1, 0), couleur_principale),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -80,7 +81,7 @@ def generer_inventaire_pdf(produits, libelle_filtre):
     recap.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eef2ff')),
         ('TEXTCOLOR', (0, 0), (0, 0), colors.grey),
-        ('TEXTCOLOR', (1, 0), (-1, 0), ACCENT),
+        ('TEXTCOLOR', (1, 0), (-1, 0), couleur_principale),
         ('FONTNAME', (1, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (0, 0), 9),
         ('FONTSIZE', (1, 0), (-1, 0), 12),
@@ -110,6 +111,7 @@ def generer_ticket_vente_pdf(vente):
     )
     styles = getSampleStyleSheet()
     elements = []
+    couleur_principale = get_couleur_principale()
 
     elements.append(bandeau_entete(
         TICKET_LARGEUR,
@@ -132,7 +134,7 @@ def generer_ticket_vente_pdf(vente):
 
     table = Table(data, colWidths=[50 * mm, 35 * mm, 30 * mm, 35 * mm], repeatRows=1)
     style = [
-        ('BACKGROUND', (0, 0), (-1, 0), ACCENT),
+        ('BACKGROUND', (0, 0), (-1, 0), couleur_principale),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -152,7 +154,7 @@ def generer_ticket_vente_pdf(vente):
     montant_table = Table([[f"MONTANT TOTAL : {format_fcfa(vente.montant_total)}"]], colWidths=[TICKET_LARGEUR])
     montant_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eef2ff')),
-        ('TEXTCOLOR', (0, 0), (-1, -1), ACCENT),
+        ('TEXTCOLOR', (0, 0), (-1, -1), couleur_principale),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 14),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),

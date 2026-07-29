@@ -12,10 +12,21 @@ from reportlab.platypus import Image, Paragraph, Spacer, Table, TableStyle
 
 from apps.etablissement.models import Etablissement
 
-ACCENT = colors.HexColor('#1e3260')
+COULEUR_ACCENT_DEFAUT = '#386745'
+COULEUR_SECONDAIRE_DEFAUT = '#FDF7E5'
+
 BORDER = colors.HexColor('#DEE2E6')
 ROW_ALT = colors.HexColor('#FAFBFC')
 BADGE_NEUTRE = colors.HexColor('#6c757d')
+
+
+def get_couleur_principale():
+    """Couleur de marque des documents PDF (bandeaux, en-têtes de tableau) :
+    la couleur principale configurée dans les paramètres établissement, ou
+    le vert MAGMA par défaut si rien n'est configuré."""
+    etablissement = Etablissement.get_instance()
+    hexa = etablissement.couleur_principale if etablissement and etablissement.couleur_principale else COULEUR_ACCENT_DEFAUT
+    return colors.HexColor(hexa)
 
 
 def bandeau_entete(largeur, titre_droite):
@@ -24,6 +35,8 @@ def bandeau_entete(largeur, titre_droite):
     etablissement = Etablissement.get_instance()
     nom = etablissement.nom if etablissement else 'MAGMA'
     slogan = etablissement.slogan if etablissement and etablissement.slogan else ''
+    couleur_principale = get_couleur_principale()
+    couleur_secondaire = etablissement.couleur_secondaire if etablissement and etablissement.couleur_secondaire else COULEUR_SECONDAIRE_DEFAUT
 
     largeur_logo = 18 * mm if (etablissement and etablissement.logo) else 0
     largeur_gauche = largeur * 0.58
@@ -35,7 +48,7 @@ def bandeau_entete(largeur, titre_droite):
                                    alignment=TA_RIGHT, leading=13)
 
     texte_nom = Paragraph(
-        f"<b>{nom}</b>" + (f"<br/><font size=8 color='#c9d6ec'>{slogan}</font>" if slogan else ''),
+        f"<b>{nom}</b>" + (f"<br/><font size=8 color='{couleur_secondaire}'>{slogan}</font>" if slogan else ''),
         nom_style,
     )
 
@@ -57,7 +70,7 @@ def bandeau_entete(largeur, titre_droite):
 
     bandeau = Table([[gauche, Paragraph(titre_droite, droite_style)]], colWidths=[largeur_gauche, largeur_droite])
     bandeau.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), ACCENT),
+        ('BACKGROUND', (0, 0), (-1, -1), couleur_principale),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('LEFTPADDING', (0, 0), (0, -1), 12),
         ('RIGHTPADDING', (-1, 0), (-1, -1), 12),
@@ -69,10 +82,10 @@ def bandeau_entete(largeur, titre_droite):
 
 def pied_de_page(styles, mention=None):
     etablissement = Etablissement.get_instance()
-    lignes = [etablissement.nom if etablissement else 'MAGMA']
+    nom = etablissement.nom if etablissement else 'MAGMA'
+    adresse = etablissement.adresse if etablissement else ''
+    lignes = [' — '.join(filter(None, [nom, adresse]))]
     if etablissement:
-        if etablissement.adresse:
-            lignes.append(etablissement.adresse)
         coord = ' — '.join(filter(None, [etablissement.telephone, etablissement.email]))
         if coord:
             lignes.append(coord)

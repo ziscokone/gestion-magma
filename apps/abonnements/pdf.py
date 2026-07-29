@@ -11,8 +11,6 @@ signature/cachet).
 from io import BytesIO
 
 from django.utils import timezone
-from reportlab.graphics.barcode.qr import QrCodeWidget
-from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -20,7 +18,8 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from core.pdf import ACCENT, BORDER, bandeau_entete, pied_de_page
+from core.pdf import BORDER, bandeau_entete, get_couleur_principale, pied_de_page
+from core.qr import qr_drawing
 from core.utils import format_fcfa, montant_en_lettres
 
 FICHE_LARGEUR = 170 * mm
@@ -30,15 +29,6 @@ MENTION_LEGALE = "Ce document ne constitue pas une facture normalisée. Merci de
 
 def _pied_de_page(styles):
     return pied_de_page(styles, mention=MENTION_LEGALE)
-
-
-def _qr_code(data, taille=22 * mm):
-    widget = QrCodeWidget(data)
-    x1, y1, x2, y2 = widget.getBounds()
-    largeur, hauteur = x2 - x1, y2 - y1
-    dessin = Drawing(taille, taille, transform=[taille / largeur, 0, 0, taille / hauteur, 0, 0])
-    dessin.add(widget)
-    return dessin
 
 
 def _bloc_signature(largeur):
@@ -62,7 +52,7 @@ def _bloc_signature(largeur):
 def _pied_avec_qr(styles, largeur, qr_data):
     """Pied de page + zone signature/cachet + QR code d'authenticité, alignés sur une même ligne."""
     signature = _bloc_signature(largeur * 0.62)
-    qr = _qr_code(qr_data, taille=20 * mm)
+    qr = qr_drawing(qr_data, taille=20 * mm)
     qr_legende = Paragraph(
         "Scanner pour<br/>vérifier ce document",
         ParagraphStyle('qr_legende', parent=styles['Normal'], alignment=TA_CENTER,
@@ -98,12 +88,13 @@ def generer_fiche_abonnement_pdf(abonnement):
     )
     styles = getSampleStyleSheet()
     elements = []
+    couleur_principale = get_couleur_principale()
 
     elements.append(bandeau_entete(
         FICHE_LARGEUR,
         f"<b>REÇU N° {abonnement.numero_recu}</b><br/>Émis le {timezone.now():%d/%m/%Y}",
     ))
-    elements.append(Spacer(1, 8 * mm))
+    elements.append(Spacer(1, 14 * mm))
 
     infos = Table(
         [[
@@ -129,7 +120,7 @@ def generer_fiche_abonnement_pdf(abonnement):
     )
     montant_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#eef2ff')),
-        ('TEXTCOLOR', (0, 0), (-1, -1), ACCENT),
+        ('TEXTCOLOR', (0, 0), (-1, -1), couleur_principale),
         ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 14),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),

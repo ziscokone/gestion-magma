@@ -1,4 +1,12 @@
+from django.core.validators import RegexValidator
 from django.db import models
+
+from core.utils import assombrir_couleur, hex_vers_rgb
+
+_VALIDATEUR_HEX = RegexValidator(
+    regex=r'^#[0-9A-Fa-f]{6}$',
+    message="Couleur au format hexadécimal, ex : #386745",
+)
 
 
 class Etablissement(models.Model):
@@ -12,6 +20,21 @@ class Etablissement(models.Model):
     adresse = models.TextField(blank=True, verbose_name="Adresse")
     telephone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     email = models.EmailField(blank=True, verbose_name="Email")
+    couleur_principale = models.CharField(
+        max_length=7, default='#386745', validators=[_VALIDATEUR_HEX],
+        verbose_name="Couleur principale",
+        help_text="Utilisée pour la navigation, les boutons et les en-têtes de document (PDF)."
+    )
+    couleur_secondaire = models.CharField(
+        max_length=7, default='#FDF7E5', validators=[_VALIDATEUR_HEX],
+        verbose_name="Couleur secondaire",
+        help_text="Utilisée pour le texte sur fond de couleur principale (ex : slogan)."
+    )
+    couleur_accent = models.CharField(
+        max_length=7, default='#F46722', validators=[_VALIDATEUR_HEX],
+        verbose_name="Couleur d'accent (survol)",
+        help_text="Utilisée au survol des menus et des boutons."
+    )
     solde_initial_caisse = models.PositiveIntegerField(
         default=0, verbose_name="Solde de caisse initial (FCFA)",
         help_text="Montant déjà en caisse au moment où vous commencez à utiliser le logiciel."
@@ -37,3 +60,18 @@ class Etablissement(models.Model):
     @classmethod
     def get_instance(cls):
         return cls.objects.first()
+
+    @property
+    def couleur_principale_foncee(self):
+        """État :hover/:active de la couleur principale — dérivé, pas de champ dédié."""
+        return assombrir_couleur(self.couleur_principale)
+
+    @property
+    def couleur_principale_rgb(self):
+        """'R,G,B' pour composer des rgba() CSS (dégradés, halos) à partir de la couleur principale."""
+        return '{},{},{}'.format(*hex_vers_rgb(self.couleur_principale))
+
+    @property
+    def couleur_accent_foncee(self):
+        """État :hover des boutons déjà en couleur d'accent (ex : bouton "Nouvel abonnement")."""
+        return assombrir_couleur(self.couleur_accent)

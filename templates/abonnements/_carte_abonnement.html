@@ -1,0 +1,151 @@
+<!-- Aperçu HTML de la carte de membre — reflète la carte PNG générée par
+     apps/abonnements/carte.py::generer_carte_abonnement_png (mêmes proportions,
+     mêmes couleurs de marque). Attend dans le contexte : `abonnement`,
+     `etablissement`, `carte_qr_data_uri`. -->
+<style>
+.carte-membre {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 85.6 / 53.98;
+    margin: 0 auto;
+    border-radius: 14px;
+    background: var(--color-accent);
+    color: #FFFFFF;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    padding: 5% 6%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.carte-membre-triangle {
+    position: absolute;
+    inset: 0;
+    background: var(--color-hover);
+    clip-path: polygon(100% 100%, 100% 52%, 70% 100%);
+}
+
+.carte-membre-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.carte-membre-logo {
+    width: 15%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.carte-membre-nom-etab {
+    font-weight: 800;
+    font-size: clamp(0.8rem, 4.2vw, 1.05rem);
+    line-height: 1.15;
+}
+
+.carte-membre-label {
+    font-size: clamp(0.5rem, 1.9vw, 0.62rem);
+    color: var(--color-secondary);
+    letter-spacing: 0.5px;
+}
+
+.carte-membre-statut {
+    position: absolute;
+    top: 5%;
+    right: 6%;
+    font-size: clamp(0.55rem, 2vw, 0.68rem);
+    font-weight: 800;
+    padding: 0.25em 0.9em;
+    border-radius: 999px;
+    background: #eafaf0;
+    color: #2a6b45;
+}
+
+.carte-membre-statut.expire {
+    background: #fdecea;
+    color: #a83a32;
+}
+
+.carte-membre-corps {
+    position: relative;
+}
+
+.carte-membre-nom-client {
+    font-weight: 800;
+    font-size: clamp(1rem, 5.5vw, 1.3rem);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.carte-membre-tel {
+    font-size: clamp(0.65rem, 2.6vw, 0.8rem);
+    color: var(--color-secondary);
+    margin-top: 2px;
+}
+
+.carte-membre-type {
+    font-weight: 700;
+    font-size: clamp(0.68rem, 2.8vw, 0.85rem);
+    margin-top: 10px;
+}
+
+.carte-membre-periode {
+    font-size: clamp(0.58rem, 2.3vw, 0.73rem);
+    color: var(--color-secondary);
+    margin-top: 2px;
+}
+
+.carte-membre-qr {
+    position: absolute;
+    right: 6%;
+    bottom: 5%;
+    width: 20%;
+    aspect-ratio: 1 / 1;
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 6%;
+    box-sizing: border-box;
+}
+
+.carte-membre-qr img {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+</style>
+
+<div class="carte-membre">
+    <div class="carte-membre-triangle"></div>
+
+    <div class="carte-membre-header">
+        {% if etablissement and etablissement.logo %}
+            <img src="{{ etablissement.logo.url }}" alt="Logo" class="carte-membre-logo">
+        {% endif %}
+        <div>
+            <div class="carte-membre-nom-etab">{% if etablissement %}{{ etablissement.nom }}{% else %}MAGMA FITNESS{% endif %}</div>
+            <div class="carte-membre-label">CARTE DE MEMBRE</div>
+        </div>
+    </div>
+
+    <div class="carte-membre-statut {% if abonnement.statut == 'expire' %}expire{% endif %}">
+        {% if abonnement.statut == 'expire' %}Expiré{% else %}Actif{% endif %}
+    </div>
+
+    <div class="carte-membre-corps">
+        <div class="carte-membre-nom-client">{{ abonnement.client.nom_complet }}</div>
+        <div class="carte-membre-tel">{{ abonnement.client.telephone }}</div>
+        <div class="carte-membre-type">{{ abonnement.type_abonnement.nom }}</div>
+        <div class="carte-membre-periode">Valable du {{ abonnement.date_debut|date:"d/m/Y" }} au {{ abonnement.date_fin|date:"d/m/Y" }}</div>
+    </div>
+
+    <div class="carte-membre-qr">
+        <img src="{{ carte_qr_data_uri }}" alt="QR de vérification">
+    </div>
+</div>

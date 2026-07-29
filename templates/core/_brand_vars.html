@@ -1,0 +1,13 @@
+<!-- Variables CSS de marque, dérivées des couleurs configurées dans les
+     paramètres établissement. Chargé après custom.css (même sélecteur
+     :root, donc l'ordre de déclaration fait gagner ces valeurs). -->
+<style>
+:root {
+    --color-accent: {{ etablissement.couleur_principale|default:"#386745" }};
+    --color-accent-hover: {{ etablissement.couleur_principale_foncee|default:"#2a4e33" }};
+    --color-accent-rgb: {{ etablissement.couleur_principale_rgb|default:"56,103,69" }};
+    --color-secondary: {{ etablissement.couleur_secondaire|default:"#FDF7E5" }};
+    --color-hover: {{ etablissement.couleur_accent|default:"#F46722" }};
+    --color-hover-dark: {{ etablissement.couleur_accent_foncee|default:"#be501a" }};
+}
+</style>
