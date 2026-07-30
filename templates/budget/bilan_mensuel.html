@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Bilan mensuel — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-calendar3 me-2"></i>Mois avec activité
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for mois in mois_disponibles %}
+                    <a href="?mois={{ mois|date:'Y-m' }}"
+                       class="list-group-item list-group-item-action"
+                       {% if mois == mois_selectionne %}
+                       style="background-color: var(--color-accent); border-color: var(--color-accent); color: #fff; font-weight: 600;"
+                       {% endif %}>
+                        {{ mois|date:"F Y"|capfirst }}
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-muted small">Aucune activité enregistrée.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9 mb-3">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <i class="bi bi-clipboard-data me-2"></i>Bilan de {{ mois_selectionne|date:"F Y"|capfirst }}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <div class="stat-card">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-icon-circle success"><i class="bi bi-graph-up-arrow"></i></div>
+                                    <div class="text-start">
+                                        <div class="stat-value">{{ montant_entrees|fcfa }}</div>
+                                        <div class="stat-label">Total entrées</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="stat-card">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-icon-circle danger"><i class="bi bi-graph-down-arrow"></i></div>
+                                    <div class="text-start">
+                                        <div class="stat-value">{{ montant_sorties|fcfa }}</div>
+                                        <div class="stat-label">Total sorties</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <div class="stat-card">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="stat-icon-circle {% if solde_net < 0 %}danger{% else %}accent{% endif %}">
+                                        <i class="bi bi-wallet2"></i>
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="stat-value" style="{% if solde_net < 0 %}color: var(--color-danger);{% endif %}">{{ solde_net|fcfa }}</div>
+                                        <div class="stat-label">Solde net</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        {{ nb_operations }} opération{{ nb_operations|pluralize }} enregistrée{{ nb_operations|pluralize }} ce mois-ci.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <i class="bi bi-box-arrow-in-down me-2"></i>Détail des entrées
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for ligne in repartition_entrees %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ ligne.libelle }} <span class="text-muted small">({{ ligne.nombre }})</span></span>
+                                <span class="montant-entree">{{ ligne.montant|fcfa }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-muted small">Aucune entrée ce mois-ci.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <i class="bi bi-box-arrow-up me-2"></i>Détail des sorties
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            {% for ligne in repartition_sorties %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ ligne.libelle }} <span class="text-muted small">({{ ligne.nombre }})</span></span>
+                                <span class="montant-sortie">{{ ligne.montant|fcfa }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-muted small">Aucune sortie ce mois-ci.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -64,7 +64,7 @@ class SeanceCreateView(LoginRequiredMixin, View):
                 type_prestation=type_prestation,
                 mode_paiement=form.cleaned_data['mode_paiement'],
                 operateur_mobile_money=form.cleaned_data['operateur_mobile_money'],
-                statut_paiement=form.cleaned_data['statut_paiement'],
+                statut_paiement='paye',
                 montant=type_prestation.prix,
                 enregistre_par=request.user,
             )

@@ -73,12 +73,6 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.statut_paiement %}
-                    </div>
-                </div>
-
                 <div class="d-flex justify-content-between mt-3">
                     <a href="{% url 'clients:seance_list' %}" class="btn btn-danger">
                         <i class="bi bi-x-lg me-1"></i>Annuler

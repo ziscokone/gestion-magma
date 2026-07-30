@@ -6,12 +6,15 @@ app_name = 'stock'
 urlpatterns = [
     path('', views.ProduitListView.as_view(), name='produit_list'),
     path('inventaire.pdf', views.ProduitInventairePDFView.as_view(), name='produit_inventaire_pdf'),
+    path('rapport-ventes/', views.RapportVentesView.as_view(), name='rapport_ventes'),
     path('produits/ajouter/', views.ProduitCreateView.as_view(), name='produit_create'),
     path('produits/<int:pk>/', views.ProduitDetailView.as_view(), name='produit_detail'),
     path('produits/<int:pk>/modifier/', views.ProduitUpdateView.as_view(), name='produit_update'),
     path('produits/<int:pk>/supprimer/', views.ProduitDeleteView.as_view(), name='produit_delete'),
 
     path('mouvements/', views.MouvementListView.as_view(), name='mouvement_list'),
+    path('mouvements/rapport/', views.RapportMouvementsView.as_view(), name='rapport_mouvements'),
+    path('mouvements/rapport.pdf', views.RapportMouvementsPDFView.as_view(), name='rapport_mouvements_pdf'),
     path('mouvements/approvisionnement/', views.ApprovisionnementCreateView.as_view(), name='approvisionnement_create'),
     path('mouvements/vente/', views.VenteCreateView.as_view(), name='vente_create'),
     path('mouvements/vente/<int:pk>/confirmation/', views.VenteConfirmationView.as_view(), name='vente_confirmation'),

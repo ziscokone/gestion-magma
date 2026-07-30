@@ -71,3 +71,15 @@ def creer_operation_stock(sender, instance, created, **kwargs):
             mouvement_stock=instance,
             enregistre_par=instance.enregistre_par,
         )
+    elif instance.type_mouvement == 'sortie' and instance.motif in ('perte', 'usage_interne'):
+        # Pas une vraie sortie de caisse (l'argent a déjà été décaissé à
+        # l'achat du produit) : tracée pour information — coût du produit
+        # perdu/consommé — et exclue du solde de caisse (cf.
+        # `OperationBudget.CATEGORIES_HORS_CAISSE` / `solde_caisse`).
+        OperationBudget.objects.create(
+            type_operation='sortie',
+            categorie='perte_produit',
+            montant=instance.montant,
+            mouvement_stock=instance,
+            enregistre_par=instance.enregistre_par,
+        )

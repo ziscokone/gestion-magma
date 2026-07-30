@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Rapport de ventes — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-graph-up-arrow me-2"></i>Rapport de ventes</span>
+            <a href="{% url 'stock:produit_list' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-box-seam me-1"></i>Catalogue produits
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-2 filter-bar">
+                <div class="col-auto">
+                    <label class="form-label small text-muted mb-1 d-block">Du</label>
+                    <input type="date" name="debut" class="filter-input" value="{{ date_debut|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small text-muted mb-1 d-block">Au</label>
+                    <input type="date" name="fin" class="filter-input" value="{{ date_fin|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto align-self-end">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-trophy-fill me-2"></i>Top des ventes
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for ligne in top_ventes %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span>
+                                <span class="text-muted small">#{{ forloop.counter }}</span>
+                                <strong>{{ ligne.produit.nom }}</strong>
+                                <span class="text-muted small">— {{ ligne.produit.categorie.nom }}</span>
+                            </span>
+                            <span class="montant-entree">{{ ligne.chiffre_affaires|fcfa }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
+                            <span>{{ ligne.quantite_vendue }} {{ ligne.produit.get_unite_display|lower }}(s) vendu(s)</span>
+                            <span>{{ ligne.nb_ventes }} vente{{ ligne.nb_ventes|pluralize }}</span>
+                        </div>
+                        {% if quantite_max %}
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" style="width: {% widthratio ligne.quantite_vendue quantite_max 100 %}%; background-color: var(--color-accent);"></div>
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted small">Aucune vente sur cette période.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-hourglass-split me-2"></i>Produits qui ne sortent pas
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for ligne in produits_qui_ne_sortent_pas %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>{{ ligne.produit.nom }}</strong>
+                            <span class="text-muted small">— {{ ligne.produit.categorie.nom }}</span>
+                        </span>
+                        {% if ligne.quantite_vendue == 0 %}
+                        <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                            Aucune vente
+                        </span>
+                        {% else %}
+                        <span class="badge" style="background-color: var(--color-warning-light); color: var(--color-warning);">
+                            {{ ligne.quantite_vendue }} {{ ligne.produit.get_unite_display|lower }}(s) — {{ ligne.nb_ventes }} vente{{ ligne.nb_ventes|pluralize }}
+                        </span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted small">Aucun produit actif à afficher.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <p class="text-muted small">
+        Sur {{ nb_produits_actifs }} produit{{ nb_produits_actifs|pluralize }} actif{{ nb_produits_actifs|pluralize }} — utile pour orienter le prochain réapprovisionnement.
+    </p>
+</div>
+{% endblock %}

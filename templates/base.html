@@ -82,17 +82,48 @@
 
                 {# ── MODULE : STOCK ────────────────────────────────────── #}
                 {% elif active_module == 'stock' %}
-                <li class="nav-item">
-                    <a class="nav-link {% if 'produit' in request.resolver_match.url_name and 'categorie' not in request.resolver_match.url_name %}active{% endif %}"
-                       href="{% url 'stock:produit_list' %}">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if 'produit' in request.resolver_match.url_name or request.resolver_match.url_name == 'rapport_ventes' %}active{% endif %}"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-box-seam me-1"></i> Produits
                     </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:produit_list' %}">
+                                <i class="bi bi-box-seam me-2"></i>Catalogue produits
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:rapport_ventes' %}">
+                                <i class="bi bi-graph-up-arrow me-2"></i>Rapport de ventes
+                            </a>
+                        </li>
+                        {% if user.has_global_access %}
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:categorie_produit_list' %}">
+                                <i class="bi bi-tags-fill me-2"></i>Catégories de produits
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'mouvement' in request.resolver_match.url_name %}active{% endif %}"
-                       href="{% url 'stock:mouvement_list' %}">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if 'mouvement' in request.resolver_match.url_name %}active{% endif %}"
+                       href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-arrow-left-right me-1"></i> Mouvements
                     </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:mouvement_list' %}">
+                                <i class="bi bi-journal-text me-2"></i>Journal des mouvements
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:rapport_mouvements' %}">
+                                <i class="bi bi-file-earmark-bar-graph me-2"></i>Rapport des mouvements
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'fournisseur' in request.resolver_match.url_name %}active{% endif %}"
@@ -100,21 +131,25 @@
                         <i class="bi bi-truck me-1"></i> Fournisseurs
                     </a>
                 </li>
-                {% if user.has_global_access %}
-                <li class="nav-item">
-                    <a class="nav-link {% if 'categorie_produit' in request.resolver_match.url_name %}active{% endif %}"
-                       href="{% url 'stock:categorie_produit_list' %}">
-                        <i class="bi bi-tags-fill me-1"></i> Catégories de produits
-                    </a>
-                </li>
-                {% endif %}
 
                 {# ── MODULE : BUDGET ───────────────────────────────────── #}
                 {% elif active_module == 'budget' %}
                 <li class="nav-item">
-                    <a class="nav-link {% if 'operation' in request.resolver_match.url_name %}active{% endif %}"
+                    <a class="nav-link {% if 'operation' in request.resolver_match.url_name and 'rapport' not in request.resolver_match.url_name %}active{% endif %}"
                        href="{% url 'budget:operation_list' %}">
                         <i class="bi bi-cash-coin me-1"></i> Opérations
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'rapport' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'budget:rapport_operations' %}">
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i> Rapports
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'bilan_mensuel' %}active{% endif %}"
+                       href="{% url 'budget:bilan_mensuel' %}">
+                        <i class="bi bi-clipboard-data me-1"></i> Bilan mensuel
                     </a>
                 </li>
                 {% if user.has_global_access %}

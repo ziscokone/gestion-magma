@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load format_tags %}
 
-{% block title %}Budget — MAGMA{% endblock %}
+{% block title %}Rapport des opérations — MAGMA{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,12 +9,10 @@
         <div class="col-md-3 mb-2">
             <div class="stat-card">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon-circle {% if solde_caisse < 0 %}danger{% else %}accent{% endif %}">
-                        <i class="bi bi-wallet2"></i>
-                    </div>
+                    <div class="stat-icon-circle accent"><i class="bi bi-arrow-left-right"></i></div>
                     <div class="text-start">
-                        <div class="stat-value" style="{% if solde_caisse < 0 %}color: var(--color-danger);{% endif %}">{{ solde_caisse|fcfa }}</div>
-                        <div class="stat-label">Solde de caisse</div>
+                        <div class="stat-value">{{ nb_entrees|add:nb_sorties }}</div>
+                        <div class="stat-label">Opérations sur la période</div>
                     </div>
                 </div>
             </div>
@@ -24,19 +22,8 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="stat-icon-circle success"><i class="bi bi-graph-up-arrow"></i></div>
                     <div class="text-start">
-                        <div class="stat-value">{{ recettes_jour|fcfa }}</div>
-                        <div class="stat-label">Recettes du jour</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-2">
-            <div class="stat-card">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon-circle success"><i class="bi bi-calendar2-check"></i></div>
-                    <div class="text-start">
-                        <div class="stat-value">{{ recettes_mois|fcfa }}</div>
-                        <div class="stat-label">Recettes du mois</div>
+                        <div class="stat-value">{{ montant_entrees|fcfa }}</div>
+                        <div class="stat-label">Entrées ({{ nb_entrees }})</div>
                     </div>
                 </div>
             </div>
@@ -46,8 +33,21 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="stat-icon-circle danger"><i class="bi bi-graph-down-arrow"></i></div>
                     <div class="text-start">
-                        <div class="stat-value">{{ depenses_mois|fcfa }}</div>
-                        <div class="stat-label">Dépenses du mois</div>
+                        <div class="stat-value">{{ montant_sorties|fcfa }}</div>
+                        <div class="stat-label">Sorties ({{ nb_sorties }})</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle {% if solde_periode < 0 %}danger{% else %}accent{% endif %}">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="stat-value" style="{% if solde_periode < 0 %}color: var(--color-danger);{% endif %}">{{ solde_periode|fcfa }}</div>
+                        <div class="stat-label">Solde de la période</div>
                     </div>
                 </div>
             </div>
@@ -56,25 +56,28 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-cash-stack me-2"></i>Journal des opérations</span>
-            <div class="d-flex gap-2">
-                <a href="{% url 'budget:rapport_operations' %}" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-file-earmark-bar-graph me-1"></i>Rapport
+            <span><i class="bi bi-file-earmark-bar-graph me-2"></i>Rapport des opérations</span>
+            <div>
+                <a href="{% url 'budget:rapport_operations_export' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-light me-1" title="Exporter le rapport (respecte la période et les filtres actifs)">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Exporter
                 </a>
-                <a href="{% url 'budget:operation_export' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-light" title="Exporter les opérations correspondant au filtre actif">
-                    <i class="bi bi-file-earmark-excel me-1"></i>Exporter (filtre actif)
-                </a>
-                <button type="submit" form="export-selection-form" class="btn btn-sm btn-outline-light" id="export-selection-btn" disabled>
-                    <i class="bi bi-file-earmark-excel me-1"></i>Exporter la sélection<span id="export-count"></span>
-                </button>
-                <a href="{% url 'budget:operation_create' %}" class="btn btn-sm btn-accent">
-                    <i class="bi bi-plus-lg me-1"></i>Nouvelle opération
+                <a href="{% url 'budget:operation_list' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-cash-stack me-1"></i>Journal des opérations
                 </a>
             </div>
         </div>
         <div class="card-body">
             <form method="get" class="row g-2 mb-3 filter-bar">
                 <div class="col-auto">
+                    <label class="form-label small text-muted mb-1 d-block">Du</label>
+                    <input type="date" name="debut" class="filter-input" value="{{ date_debut|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small text-muted mb-1 d-block">Au</label>
+                    <input type="date" name="fin" class="filter-input" value="{{ date_fin|date:'Y-m-d' }}">
+                </div>
+                <div class="col-auto">
+                    <label class="form-label small text-muted mb-1 d-block">Type</label>
                     <select name="type" class="filter-select" onchange="this.form.submit()">
                         <option value="tous" {% if type_filtre == 'tous' %}selected{% endif %}>Tous les types</option>
                         <option value="entree" {% if type_filtre == 'entree' %}selected{% endif %}>Entrées</option>
@@ -82,6 +85,7 @@
                     </select>
                 </div>
                 <div class="col-auto">
+                    <label class="form-label small text-muted mb-1 d-block">Catégorie</label>
                     <select name="categorie" class="filter-select" onchange="this.form.submit()">
                         <option value="toutes" {% if categorie_filtre == 'toutes' %}selected{% endif %}>Toutes les catégories</option>
                         {% for value, label in categories %}
@@ -89,32 +93,27 @@
                         {% endfor %}
                     </select>
                 </div>
-            </form>
-
-            <form method="post" action="{% url 'budget:operation_export' %}" id="export-selection-form">
-                {% csrf_token %}
+                <div class="col-auto align-self-end">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill">
+                        Filtrer
+                    </button>
+                </div>
             </form>
 
             <table class="table">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="select-all" class="form-check-input"></th>
                         <th>Date</th>
                         <th>Type</th>
                         <th>Catégorie</th>
                         <th>Montant</th>
                         <th>Paiement</th>
                         <th>Origine</th>
-                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for operation in operations %}
                     <tr>
-                        <td>
-                            <input type="checkbox" name="ids" value="{{ operation.pk }}" form="export-selection-form"
-                                   class="form-check-input operation-checkbox">
-                        </td>
                         <td>{{ operation.date|date:"d/m/Y H:i" }}</td>
                         <td>
                             {% if operation.type_operation == 'entree' %}
@@ -147,20 +146,9 @@
                             <span class="text-muted small">Saisie manuelle</span>
                             {% endif %}
                         </td>
-                        <td class="text-end">
-                            {% if not operation.est_automatique %}
-                            <form method="post" action="{% url 'budget:operation_delete' operation.pk %}" class="d-inline"
-                                  onsubmit="return confirm('Supprimer cette opération ?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="text-center text-muted py-4">Aucune opération.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune opération sur cette période.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -169,28 +157,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-(function () {
-    const selectAll = document.getElementById('select-all');
-    const checkboxes = document.querySelectorAll('.operation-checkbox');
-    const exportBtn = document.getElementById('export-selection-btn');
-    const exportCount = document.getElementById('export-count');
-
-    function majBoutonExport() {
-        const coches = document.querySelectorAll('.operation-checkbox:checked').length;
-        exportBtn.disabled = coches === 0;
-        exportCount.textContent = coches > 0 ? ` (${coches})` : '';
-        selectAll.checked = coches > 0 && coches === checkboxes.length;
-    }
-
-    selectAll.addEventListener('change', function () {
-        checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
-        majBoutonExport();
-    });
-    checkboxes.forEach(function (cb) { cb.addEventListener('change', majBoutonExport); });
-})();
-</script>
 {% endblock %}

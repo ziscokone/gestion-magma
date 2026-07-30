@@ -1,4 +1,5 @@
 import json
+from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -18,7 +19,7 @@ from .forms import (
     AjustementForm, ApprovisionnementForm, CategorieProduitForm, FournisseurForm, ProduitForm, VenteForm,
 )
 from .models import CategorieProduit, Fournisseur, Produit, MouvementStock, Vente
-from .pdf import generer_inventaire_pdf, generer_ticket_vente_pdf
+from .pdf import generer_inventaire_pdf, generer_rapport_mouvements_pdf, generer_ticket_vente_pdf
 
 LIBELLES_FILTRE_STOCK = {
     'tous': 'Tous les produits',
@@ -108,6 +109,55 @@ class ProduitInventairePDFView(LoginRequiredMixin, View):
         return response
 
 
+def _statistiques_ventes(date_debut, date_fin):
+    """Ventes (motif='vente') par produit sur la période : quantité vendue,
+    nombre de ventes (fréquence) et chiffre d'affaires généré — inclut aussi
+    les produits actifs qui n'ont rien vendu sur la période (stats à zéro),
+    pour repérer les invendus en vue du prochain réapprovisionnement."""
+    ventes = MouvementStock.objects.filter(
+        type_mouvement='sortie', motif='vente',
+        date__date__gte=date_debut, date__date__lte=date_fin,
+    ).select_related('produit', 'produit__categorie')
+
+    stats = {}
+    for mouvement in ventes:
+        stat = stats.setdefault(mouvement.produit_id, {
+            'produit': mouvement.produit, 'quantite_vendue': 0, 'nb_ventes': 0, 'chiffre_affaires': 0,
+        })
+        stat['quantite_vendue'] += mouvement.quantite
+        stat['nb_ventes'] += 1
+        stat['chiffre_affaires'] += mouvement.montant
+
+    for produit in Produit.objects.filter(actif=True).exclude(pk__in=stats.keys()).select_related('categorie'):
+        stats[produit.pk] = {'produit': produit, 'quantite_vendue': 0, 'nb_ventes': 0, 'chiffre_affaires': 0}
+
+    return list(stats.values())
+
+
+class RapportVentesView(LoginRequiredMixin, View):
+    """Top des ventes et produits qui ne sortent pas sur une période choisie
+    — pensé pour éclairer les décisions de réapprovisionnement plutôt que
+    pour lister les mouvements en détail (cf. `RapportMouvementsView`)."""
+    template_name = 'stock/rapport_ventes.html'
+
+    def get(self, request):
+        date_debut, date_fin = _dates_rapport(request)
+        statistiques = _statistiques_ventes(date_debut, date_fin)
+
+        top_ventes = sorted(statistiques, key=lambda s: (-s['quantite_vendue'], -s['nb_ventes']))[:10]
+        produits_qui_ne_sortent_pas = sorted(statistiques, key=lambda s: (s['quantite_vendue'], s['nb_ventes']))[:10]
+        quantite_max = max([s['quantite_vendue'] for s in top_ventes], default=0)
+
+        return render(request, self.template_name, {
+            'date_debut': date_debut,
+            'date_fin': date_fin,
+            'top_ventes': top_ventes,
+            'produits_qui_ne_sortent_pas': produits_qui_ne_sortent_pas,
+            'quantite_max': quantite_max,
+            'nb_produits_actifs': Produit.objects.filter(actif=True).count(),
+        })
+
+
 class ProduitCreateView(AdminRequiredMixin, CreateView):
     model = Produit
     form_class = ProduitForm
@@ -183,6 +233,76 @@ class MouvementListView(LoginRequiredMixin, ListView):
         context['type_filtre'] = self.request.GET.get('type', 'tous')
         context['search_query'] = self.request.GET.get('q', '')
         return context
+
+
+def _dates_rapport(request):
+    """Bornes (incluses) du rapport de mouvements — défaut : depuis le 1er du
+    mois en cours jusqu'à aujourd'hui, modifiable via les paramètres GET
+    `debut`/`fin` (format YYYY-MM-DD, celui des <input type="date">)."""
+    aujourdhui = date.today()
+    try:
+        date_debut = datetime.strptime(request.GET.get('debut', ''), '%Y-%m-%d').date()
+    except ValueError:
+        date_debut = aujourdhui.replace(day=1)
+    try:
+        date_fin = datetime.strptime(request.GET.get('fin', ''), '%Y-%m-%d').date()
+    except ValueError:
+        date_fin = aujourdhui
+    return date_debut, date_fin
+
+
+def _mouvements_rapport(request):
+    """Filtre partagé par l'écran de rapport et son export PDF."""
+    date_debut, date_fin = _dates_rapport(request)
+    queryset = MouvementStock.objects.select_related('produit', 'fournisseur').filter(
+        date__date__gte=date_debut, date__date__lte=date_fin,
+    )
+    type_mouvement = request.GET.get('type', 'tous')
+    if type_mouvement in ('entree', 'sortie'):
+        queryset = queryset.filter(type_mouvement=type_mouvement)
+    return queryset
+
+
+class RapportMouvementsView(LoginRequiredMixin, ListView):
+    """Rapport des mouvements de stock sur une période choisie — vue
+    synthétique (totaux entrées/sorties) distincte du journal au fil de
+    l'eau (`MouvementListView`)."""
+    model = MouvementStock
+    template_name = 'stock/rapport_mouvements.html'
+    context_object_name = 'mouvements'
+    paginate_by = 20
+
+    def get_queryset(self):
+        return _mouvements_rapport(self.request).order_by('-date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        date_debut, date_fin = _dates_rapport(self.request)
+        context['date_debut'] = date_debut
+        context['date_fin'] = date_fin
+        context['type_filtre'] = self.request.GET.get('type', 'tous')
+
+        mouvements_periode = _mouvements_rapport(self.request)
+        entrees = mouvements_periode.filter(type_mouvement='entree')
+        sorties = mouvements_periode.filter(type_mouvement='sortie')
+        context['nb_entrees'] = entrees.count()
+        context['nb_sorties'] = sorties.count()
+        context['montant_entrees'] = sum(m.montant for m in entrees)
+        context['montant_sorties'] = sum(m.montant for m in sorties)
+        return context
+
+
+class RapportMouvementsPDFView(LoginRequiredMixin, View):
+    """Export PDF du rapport, respectant les mêmes filtres que l'écran."""
+
+    def get(self, request):
+        date_debut, date_fin = _dates_rapport(request)
+        mouvements = list(_mouvements_rapport(request).order_by('-date'))
+        buffer = generer_rapport_mouvements_pdf(mouvements, date_debut, date_fin)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        horodatage = timezone.now().strftime('%Y%m%d_%H%M')
+        response['Content-Disposition'] = f'inline; filename="rapport_mouvements_{horodatage}.pdf"'
+        return response
 
 
 class ApprovisionnementCreateView(LoginRequiredMixin, View):

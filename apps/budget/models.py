@@ -40,12 +40,19 @@ class OperationBudget(ModePaiementMixin, models.Model):
         ('recette_abonnement', 'Recette abonnement'),
         ('achat_produit', 'Achat produit'),
         ('vente_produit', 'Vente produit'),
+        ('perte_produit', 'Perte / Usage interne produit'),
         ('charge', 'Charge'),
         ('salaire', 'Salaire'),
         ('autre', 'Autre'),
     ]
 
     CATEGORIES_MANUELLES = ('charge', 'salaire', 'autre')
+
+    # Catégories tracées pour information (coût d'un produit perdu/consommé en
+    # interne) mais qui ne représentent aucun mouvement d'argent réel — déjà
+    # décaissé à l'achat du produit. À exclure du solde de caisse pour ne pas
+    # compter cette dépense deux fois.
+    CATEGORIES_HORS_CAISSE = ('perte_produit',)
 
     date = models.DateTimeField(default=timezone.now, verbose_name="Date de l'opération")
     type_operation = models.CharField(max_length=10, choices=TYPE_OPERATION_CHOICES, verbose_name="Type d'opération")
@@ -110,5 +117,7 @@ class OperationBudget(ModePaiementMixin, models.Model):
         etablissement = Etablissement.get_instance()
         solde_initial = etablissement.solde_initial_caisse if etablissement else 0
         entrees = cls.objects.filter(type_operation='entree').aggregate(total=Sum('montant'))['total'] or 0
-        sorties = cls.objects.filter(type_operation='sortie').aggregate(total=Sum('montant'))['total'] or 0
+        sorties = cls.objects.filter(type_operation='sortie').exclude(
+            categorie__in=cls.CATEGORIES_HORS_CAISSE
+        ).aggregate(total=Sum('montant'))['total'] or 0
         return solde_initial + entrees - sorties

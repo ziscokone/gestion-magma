@@ -75,11 +75,6 @@ class SeanceForm(forms.Form):
         required=False,
         label="Opérateur Mobile Money",
     )
-    statut_paiement = forms.ChoiceField(
-        choices=Seance.STATUT_PAIEMENT_CHOICES,
-        label="Statut du paiement",
-        widget=forms.Select(attrs={'class': 'form-select'}),
-    )
 
     def clean(self):
         cleaned_data = super().clean()

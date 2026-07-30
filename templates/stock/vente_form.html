@@ -551,7 +551,11 @@
     const operateurRow = document.getElementById('operateur-row');
 
     function toggleOperateur() {
-        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'block' : 'none';
+        const estMobileMoney = modePaiementSelect.value === 'mobile_money';
+        operateurRow.style.display = estMobileMoney ? 'block' : 'none';
+        operateurRow.querySelectorAll('input[name="operateur_mobile_money"]').forEach(function (radio) {
+            radio.required = estMobileMoney;
+        });
     }
     modePaiementSelect.addEventListener('change', toggleOperateur);
     toggleOperateur();
