@@ -1,3 +1,4 @@
+import re
 from datetime import date, timedelta
 from urllib.parse import urlencode
 
@@ -15,6 +16,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from core.mixins import AdminRequiredMixin
 from core.qr import qr_code_data_uri
 from apps.clients.models import Client
+from apps.etablissement.models import Etablissement
 from .carte import generer_carte_abonnement_png
 from .forms import AbonnementForm, TypeAbonnementForm
 from .models import Abonnement, TypeAbonnement
@@ -181,6 +183,27 @@ class AbonnementDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['carte_qr_data_uri'] = qr_code_data_uri(self.object.texte_carte_membre, taille_px=160)
+
+        etablissement = Etablissement.get_instance()
+        nom_etablissement = etablissement.nom if etablissement else 'MAGMA'
+        lien_carte = self.request.build_absolute_uri(
+            reverse('abonnements:abonnement_carte_image_publique', kwargs={'public_id': self.object.public_id})
+        )
+        message = (
+            f"Bonjour {self.object.client.nom_complet}, voici votre carte de membre {nom_etablissement} "
+            f"({self.object.type_abonnement.nom}, valable jusqu'au {self.object.date_fin:%d/%m/%Y}) :\n"
+            f"{lien_carte}"
+        )
+
+        # Indicatif du client si renseigné (cas d'un client étranger), sinon
+        # celui par défaut de l'établissement — le champ `telephone` n'est
+        # jamais modifié, il reste tel quel pour la recherche/l'unicité des
+        # clients. Pas d'API WhatsApp payante ici : simple lien
+        # `api.whatsapp.com` qui ouvre WhatsApp directement sur le contact.
+        indicatif = self.object.client.indicatif_pays or (etablissement.indicatif_pays_defaut if etablissement else '+225')
+        numero_complet = re.sub(r'\D', '', indicatif) + re.sub(r'\D', '', self.object.client.telephone)
+        params = urlencode({'phone': numero_complet, 'text': message})
+        context['lien_partage_whatsapp'] = f"https://api.whatsapp.com/send?{params}"
         return context
 
 
@@ -256,6 +279,13 @@ class AbonnementFichePDFView(LoginRequiredMixin, View):
         return response
 
 
+def _reponse_image_carte(abonnement):
+    buffer = generer_carte_abonnement_png(abonnement)
+    response = HttpResponse(buffer, content_type='image/png')
+    response['Content-Disposition'] = f'inline; filename="carte-{abonnement.client.nom_complet}.png"'
+    return response
+
+
 class AbonnementCarteImageView(LoginRequiredMixin, View):
     """Carte de membre au format image (PNG), avec QR encodant directement
     le numéro d'abonnement, le nom du client et la période de validité —
@@ -263,7 +293,15 @@ class AbonnementCarteImageView(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         abonnement = get_object_or_404(Abonnement, pk=pk)
-        buffer = generer_carte_abonnement_png(abonnement)
-        response = HttpResponse(buffer, content_type='image/png')
-        response['Content-Disposition'] = f'inline; filename="carte-{abonnement.client.nom_complet}.png"'
-        return response
+        return _reponse_image_carte(abonnement)
+
+
+class AbonnementCarteImagePubliqueView(View):
+    """Même image que `AbonnementCarteImageView`, mais accessible sans
+    connexion via l'identifiant public — c'est ce lien qui est envoyé au
+    client (WhatsApp...) pour qu'il puisse ouvrir/enregistrer sa carte
+    lui-même et la présenter à l'accueil lors d'une prochaine séance."""
+
+    def get(self, request, public_id):
+        abonnement = get_object_or_404(Abonnement, public_id=public_id)
+        return _reponse_image_carte(abonnement)

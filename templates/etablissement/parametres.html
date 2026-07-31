@@ -54,6 +54,12 @@
                                     {{ form.email }}
                                     {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.indicatif_pays_defaut.id_for_label }}">{{ form.indicatif_pays_defaut.label }}</label>
+                                    {{ form.indicatif_pays_defaut }}
+                                    <div class="form-text">{{ form.indicatif_pays_defaut.help_text }}</div>
+                                    {% if form.indicatif_pays_defaut.errors %}<div class="text-danger small mt-1">{{ form.indicatif_pays_defaut.errors }}</div>{% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>

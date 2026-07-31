@@ -15,6 +15,7 @@ urlpatterns = [
     path('types/<int:pk>/supprimer/', views.TypeAbonnementDeleteView.as_view(), name='type_abonnement_delete'),
 
     path('carte/<uuid:public_id>/', views.AbonnementVerifierView.as_view(), name='abonnement_verifier'),
+    path('carte/<uuid:public_id>/image.png', views.AbonnementCarteImagePubliqueView.as_view(), name='abonnement_carte_image_publique'),
 
     path('<int:pk>/', views.AbonnementDetailView.as_view(), name='abonnement_detail'),
     path('<int:pk>/renouveler/', views.AbonnementRenewView.as_view(), name='abonnement_renew'),

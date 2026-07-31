@@ -1,6 +1,7 @@
 from django.core.validators import RegexValidator
 from django.db import models
 
+from core.indicatifs import CHOIX_INDICATIFS_PAYS
 from core.utils import assombrir_couleur, hex_vers_rgb
 
 _VALIDATEUR_HEX = RegexValidator(
@@ -20,6 +21,12 @@ class Etablissement(models.Model):
     adresse = models.TextField(blank=True, verbose_name="Adresse")
     telephone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     email = models.EmailField(blank=True, verbose_name="Email")
+    indicatif_pays_defaut = models.CharField(
+        max_length=6, default='+225', choices=CHOIX_INDICATIFS_PAYS,
+        verbose_name="Indicatif pays par défaut (partage WhatsApp)",
+        help_text="Utilisé pour composer le numéro complet des clients lors du partage WhatsApp, "
+                   "sauf si un client a un indicatif différent renseigné sur sa fiche."
+    )
     couleur_principale = models.CharField(
         max_length=7, default='#386745', validators=[_VALIDATEUR_HEX],
         verbose_name="Couleur principale",

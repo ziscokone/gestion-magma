@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.utils import timezone
 
+from core.indicatifs import CHOIX_INDICATIFS_PAYS
 from core.models import PaiementMixin
 from core.utils import format_fcfa
 
@@ -21,6 +22,11 @@ class Client(models.Model):
 
     public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     telephone = models.CharField(max_length=20, unique=True, verbose_name="Téléphone")
+    indicatif_pays = models.CharField(
+        max_length=6, blank=True, choices=CHOIX_INDICATIFS_PAYS,
+        verbose_name="Indicatif pays (si différent du défaut établissement)",
+        help_text="À renseigner uniquement si ce client n'est pas dans le pays par défaut de l'établissement."
+    )
     nom_complet = models.CharField(max_length=200, verbose_name="Nom complet")
 
     sexe = models.CharField(max_length=1, choices=SEXE_CHOICES, blank=True, verbose_name="Sexe")

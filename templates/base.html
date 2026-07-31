@@ -66,6 +66,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="{% url 'clients:client_list' %}">
+                        <i class="bi bi-people me-1"></i> Clients
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if 'relance' in request.resolver_match.url_name %}active{% endif %}"
                        href="{% url 'abonnements:relance_list' %}">
                         <i class="bi bi-telephone-outbound-fill me-1"></i> Relances

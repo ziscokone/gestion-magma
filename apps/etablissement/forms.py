@@ -6,7 +6,7 @@ class EtablissementForm(forms.ModelForm):
     class Meta:
         model = Etablissement
         fields = [
-            'nom', 'logo', 'slogan', 'adresse', 'telephone', 'email',
+            'nom', 'logo', 'slogan', 'adresse', 'telephone', 'email', 'indicatif_pays_defaut',
             'couleur_principale', 'couleur_secondaire', 'couleur_accent', 'solde_initial_caisse',
         ]
         widgets = {
@@ -16,6 +16,7 @@ class EtablissementForm(forms.ModelForm):
             'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'indicatif_pays_defaut': forms.Select(attrs={'class': 'form-select'}),
             'couleur_principale': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
             'couleur_secondaire': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
             'couleur_accent': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),

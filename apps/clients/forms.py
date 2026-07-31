@@ -1,6 +1,7 @@
 from django import forms
 
 from core.forms import NomUniqueMixin
+from core.indicatifs import CHOIX_INDICATIFS_PAYS
 
 from .models import Client, Seance, TypePrestation
 
@@ -23,10 +24,17 @@ class TypePrestationForm(NomUniqueMixin, forms.ModelForm):
 
 
 class ClientForm(forms.ModelForm):
+    indicatif_pays = forms.ChoiceField(
+        choices=[('', "Utiliser l'indicatif par défaut de l'établissement")] + CHOIX_INDICATIFS_PAYS,
+        required=False,
+        label="Indicatif pays (si différent du défaut établissement)",
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+
     class Meta:
         model = Client
         fields = [
-            'nom_complet', 'telephone', 'photo_cni',
+            'nom_complet', 'telephone', 'indicatif_pays', 'photo_cni',
             'sexe', 'date_naissance', 'objectif',
             'taille', 'poids', 'bassin',
             'contact_urgence_nom', 'contact_urgence_telephone',
