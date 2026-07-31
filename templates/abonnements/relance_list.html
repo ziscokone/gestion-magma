@@ -99,7 +99,7 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            <form method="post" action="{% url 'abonnements:relance_toggle' abonnement.pk %}" class="d-inline">
+                            <form method="post" action="{% url 'abonnements:relance_toggle' abonnement.pk %}" class="d-inline" id="relance-toggle-form-{{ abonnement.pk }}">
                                 {% csrf_token %}
                                 {% if abonnement.relance_effectuee %}
                                 <button type="submit" class="btn btn-sm btn-outline-secondary" title="Remettre en attente">
@@ -111,6 +111,13 @@
                                 </button>
                                 {% endif %}
                             </form>
+                            <a href="{{ abonnement.lien_relance_whatsapp }}" target="_blank"
+                               class="btn btn-sm btn-outline-success relance-whatsapp-btn"
+                               data-toggle-form="relance-toggle-form-{{ abonnement.pk }}"
+                               data-deja-contacte="{% if abonnement.relance_effectuee %}1{% else %}0{% endif %}"
+                               title="Relancer via WhatsApp (marque automatiquement comme contacté)">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
                             <a href="{% url 'abonnements:abonnement_renew' abonnement.pk %}" class="btn btn-sm btn-outline-primary" title="Renouveler">
                                 <i class="bi bi-arrow-repeat"></i>
                             </a>
@@ -126,4 +133,16 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.relance-whatsapp-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        if (btn.dataset.dejaContacte === '1') { return; }
+        const form = document.getElementById(btn.dataset.toggleForm);
+        if (form) { form.requestSubmit(); }
+    });
+});
+</script>
 {% endblock %}

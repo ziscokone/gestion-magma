@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Page introuvable — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <div class="card text-center" style="max-width: 480px; width: 100%; margin-top: 3rem;">
+            <div class="card-body py-5">
+                <div class="stat-icon-circle accent mx-auto mb-3" style="width: 76px; height: 76px; font-size: 2.1rem; border-radius: 50%;">
+                    <i class="bi bi-signpost-2"></i>
+                </div>
+                <div class="fw-bold" style="font-size: 3.2rem; color: var(--color-accent); line-height: 1;">404</div>
+                <h4 class="mt-2 mb-2">Page introuvable</h4>
+                <p class="text-muted mb-0">
+                    La page que vous cherchez n'existe pas, plus, ou l'adresse saisie est incorrecte.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

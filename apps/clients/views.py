@@ -13,8 +13,8 @@ from django.views.generic import ListView, DetailView, UpdateView, CreateView, D
 
 from core.mixins import AdminRequiredMixin
 from apps.abonnements.models import Abonnement
-from .forms import SeanceForm, ClientForm, TypePrestationForm
-from .models import Client, Seance, TypePrestation
+from .forms import SeanceForm, ClientForm, ObjectifSportifForm, TypePrestationForm
+from .models import Client, ObjectifSportif, Seance, TypePrestation
 
 
 class SeanceListView(LoginRequiredMixin, ListView):
@@ -127,7 +127,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         client = self.object
         seances_qs = client.seances.select_related('type_prestation').all()
 
-        paginator = Paginator(seances_qs, 10)
+        paginator = Paginator(seances_qs, 5)
         page_number = self.request.GET.get('page', 1)
         context['seances'] = paginator.get_page(page_number)
 
@@ -136,7 +136,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
         context['derniere_seance'] = seances_qs.order_by('-date').first()
 
         abonnements_qs = client.abonnements.select_related('type_abonnement').all()
-        abo_paginator = Paginator(abonnements_qs, 10)
+        abo_paginator = Paginator(abonnements_qs, 5)
         abo_page_number = self.request.GET.get('page_abo', 1)
         context['abonnements'] = abo_paginator.get_page(abo_page_number)
         context['abonnement_actif'] = abonnements_qs.filter(date_fin__gte=date.today()).order_by('-date_fin').first()
@@ -205,3 +205,50 @@ class TypePrestationDeleteView(AdminRequiredMixin, DeleteView):
                 "Désactivez-le plutôt depuis le formulaire de modification."
             )
             return redirect('clients:type_prestation_list')
+
+
+class ObjectifSportifListView(AdminRequiredMixin, ListView):
+    """Configuration des objectifs sportifs proposés aux clients — Super Admin / Manager."""
+    model = ObjectifSportif
+    template_name = 'clients/objectif_sportif_list.html'
+    context_object_name = 'objectifs_sportifs'
+
+
+class ObjectifSportifCreateView(AdminRequiredMixin, CreateView):
+    model = ObjectifSportif
+    form_class = ObjectifSportifForm
+    template_name = 'clients/objectif_sportif_form.html'
+    success_url = reverse_lazy('clients:objectif_sportif_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Objectif sportif créé avec succès.')
+        return super().form_valid(form)
+
+
+class ObjectifSportifUpdateView(AdminRequiredMixin, UpdateView):
+    model = ObjectifSportif
+    form_class = ObjectifSportifForm
+    template_name = 'clients/objectif_sportif_form.html'
+    success_url = reverse_lazy('clients:objectif_sportif_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Objectif sportif modifié avec succès.')
+        return super().form_valid(form)
+
+
+class ObjectifSportifDeleteView(AdminRequiredMixin, DeleteView):
+    model = ObjectifSportif
+    template_name = 'clients/objectif_sportif_confirm_delete.html'
+    success_url = reverse_lazy('clients:objectif_sportif_list')
+
+    def form_valid(self, form):
+        try:
+            messages.success(self.request, 'Objectif sportif supprimé avec succès.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                "Impossible de supprimer cet objectif : des clients y sont déjà rattachés. "
+                "Désactivez-le plutôt depuis le formulaire de modification."
+            )
+            return redirect('clients:objectif_sportif_list')

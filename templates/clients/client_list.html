@@ -32,7 +32,7 @@
                     <tr>
                         <td>{{ c.nom_complet }}</td>
                         <td>{{ c.telephone }}</td>
-                        <td>{{ c.get_objectif_display|default:"—" }}</td>
+                        <td>{{ c.objectif.nom|default:"—" }}</td>
                         <td>{{ c.nombre_seances }}</td>
                         <td>{{ c.derniere_seance.date|date:"d/m/Y"|default:"—" }}</td>
                         <td class="text-end">

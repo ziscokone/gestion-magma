@@ -15,11 +15,30 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 
 from core.mixins import AdminRequiredMixin
 from core.qr import qr_code_data_uri
+from core.utils import rendre_gabarit_message
 from apps.clients.models import Client
-from apps.etablissement.models import Etablissement
+from apps.etablissement.models import Etablissement, MESSAGE_PARTAGE_CARTE_DEFAUT, MESSAGE_RELANCE_DEFAUT
 from .carte import generer_carte_abonnement_png
 from .forms import AbonnementForm, TypeAbonnementForm
 from .models import Abonnement, TypeAbonnement
+
+
+def _numero_whatsapp_complet(client, etablissement):
+    """Numéro complet (indicatif + téléphone, chiffres seulement) utilisé
+    pour cibler directement le contact du client dans un lien WhatsApp.
+    Indicatif du client si renseigné (cas d'un client étranger), sinon celui
+    par défaut de l'établissement — le champ `telephone` n'est jamais
+    modifié, il reste tel quel pour la recherche/l'unicité des clients."""
+    indicatif = client.indicatif_pays or (etablissement.indicatif_pays_defaut if etablissement else '+225')
+    return re.sub(r'\D', '', indicatif) + re.sub(r'\D', '', client.telephone)
+
+
+def _lien_whatsapp(client, etablissement, message):
+    """Pas d'API WhatsApp payante ici : simple lien `api.whatsapp.com` qui
+    ouvre WhatsApp directement sur la conversation du client, message
+    pré-rempli — le personnel n'a plus qu'à cliquer sur Envoyer."""
+    numero = _numero_whatsapp_complet(client, etablissement)
+    return f"https://api.whatsapp.com/send?{urlencode({'phone': numero, 'text': message})}"
 from .pdf import generer_fiche_abonnement_pdf
 
 
@@ -156,6 +175,19 @@ class AbonnementRelanceListView(LoginRequiredMixin, ListView):
         base_qs = Abonnement.objects.filter(date_fin__gte=today, date_fin__lte=today + timedelta(days=jours))
         context['nb_a_relancer'] = base_qs.filter(relance_effectuee=False).count()
         context['nb_relances_faites'] = base_qs.filter(relance_effectuee=True).count()
+
+        etablissement = Etablissement.get_instance()
+        nom_etablissement = etablissement.nom if etablissement else 'MAGMA'
+        gabarit = etablissement.message_relance if etablissement else MESSAGE_RELANCE_DEFAUT
+        for abonnement in context['abonnements']:
+            message = rendre_gabarit_message(gabarit, {
+                'client': abonnement.client.nom_complet,
+                'etablissement': nom_etablissement,
+                'type_abonnement': abonnement.type_abonnement.nom,
+                'date_expiration': f"{abonnement.date_fin:%d/%m/%Y}",
+                'jours_restants': abonnement.jours_restants,
+            })
+            abonnement.lien_relance_whatsapp = _lien_whatsapp(abonnement.client, etablissement, message)
         return context
 
 
@@ -189,21 +221,16 @@ class AbonnementDetailView(LoginRequiredMixin, DetailView):
         lien_carte = self.request.build_absolute_uri(
             reverse('abonnements:abonnement_carte_image_publique', kwargs={'public_id': self.object.public_id})
         )
-        message = (
-            f"Bonjour {self.object.client.nom_complet}, voici votre carte de membre {nom_etablissement} "
-            f"({self.object.type_abonnement.nom}, valable jusqu'au {self.object.date_fin:%d/%m/%Y}) :\n"
-            f"{lien_carte}"
-        )
+        gabarit = etablissement.message_partage_carte if etablissement else MESSAGE_PARTAGE_CARTE_DEFAUT
+        message = rendre_gabarit_message(gabarit, {
+            'client': self.object.client.nom_complet,
+            'etablissement': nom_etablissement,
+            'type_abonnement': self.object.type_abonnement.nom,
+            'date_expiration': f"{self.object.date_fin:%d/%m/%Y}",
+            'lien_carte': lien_carte,
+        })
 
-        # Indicatif du client si renseigné (cas d'un client étranger), sinon
-        # celui par défaut de l'établissement — le champ `telephone` n'est
-        # jamais modifié, il reste tel quel pour la recherche/l'unicité des
-        # clients. Pas d'API WhatsApp payante ici : simple lien
-        # `api.whatsapp.com` qui ouvre WhatsApp directement sur le contact.
-        indicatif = self.object.client.indicatif_pays or (etablissement.indicatif_pays_defaut if etablissement else '+225')
-        numero_complet = re.sub(r'\D', '', indicatif) + re.sub(r'\D', '', self.object.client.telephone)
-        params = urlencode({'phone': numero_complet, 'text': message})
-        context['lien_partage_whatsapp'] = f"https://api.whatsapp.com/send?{params}"
+        context['lien_partage_whatsapp'] = _lien_whatsapp(self.object.client, etablissement, message)
         return context
 
 

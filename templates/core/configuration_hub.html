@@ -50,6 +50,7 @@
 .config-tile-icon.stock        { background: linear-gradient(135deg, #f0914e, #c75f1e); }
 .config-tile-icon.budget       { background: linear-gradient(135deg, #a05dc8, #7b3fa8); }
 .config-tile-icon.comptes      { background: linear-gradient(135deg, #e05b52, #b52b22); }
+.config-tile-icon.whatsapp     { background: linear-gradient(135deg, #34d399, #128c7e); }
 
 .config-tile-name {
     font-weight: 700;
@@ -103,6 +104,11 @@
                     <div class="config-tile-icon comptes"><i class="bi bi-people-fill"></i></div>
                     <div class="config-tile-name">Utilisateurs & Modules</div>
                     <p class="config-tile-desc">Comptes et accès</p>
+                </a>
+                <a href="{% url 'etablissement:messages_whatsapp' %}" class="config-tile">
+                    <div class="config-tile-icon whatsapp"><i class="bi bi-whatsapp"></i></div>
+                    <div class="config-tile-name">Messages WhatsApp</div>
+                    <p class="config-tile-desc">Carte de membre & relances</p>
                 </a>
             </div>
         </div>

@@ -4,104 +4,137 @@
 
 {% block content %}
 <div class="container">
-    <div class="card" style="max-width: 760px; margin: 0 auto;">
-        <div class="card-header">
-            <i class="bi bi-person-lines-fill me-2"></i>Compléter le profil — {{ object.nom_complet }}
-        </div>
-        <div class="card-body p-4">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
+    <div style="max-width: 1140px; margin: 0 auto; background: var(--color-bg-card); border-radius: 10px; box-shadow: var(--shadow-md); padding: 1.75rem;">
+        <h4 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>Compléter le profil — {{ object.nom_complet }}</h4>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-4">
 
-                <div class="text-uppercase text-muted small fw-bold mb-2">Identité</div>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.nom_complet %}
-                    </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.telephone %}
-                    </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.indicatif_pays %}
-                    </div>
-                </div>
+                <!-- Colonne gauche : identité, pièce d'identité, contact d'urgence -->
+                <div class="col-lg-6 d-flex flex-column gap-4">
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Pièce d'identité</div>
-                <div class="row align-items-center mb-3">
-                    <div class="col-auto">
-                        <label for="{{ form.photo_cni.id_for_label }}" class="photo-preview mb-0" role="button">
-                            {% if object.photo_cni %}
-                            <img src="{{ object.photo_cni.url }}" alt="Photo CNI" id="photo-cni-preview">
-                            {% else %}
-                            <img src="" alt="Photo CNI" id="photo-cni-preview" style="display:none;">
-                            <span id="photo-cni-placeholder" class="photo-preview-placeholder">
-                                <i class="bi bi-person-vcard"></i>
-                            </span>
-                            {% endif %}
-                            <span class="photo-preview-overlay"><i class="bi bi-camera-fill"></i></span>
-                        </label>
-                    </div>
-                    <div class="col">
-                        <div class="visually-hidden">{{ form.photo_cni }}</div>
-                        <label for="{{ form.photo_cni.id_for_label }}" class="btn btn-sm btn-outline-primary rounded-pill mb-1" role="button">
-                            <i class="bi bi-upload me-1"></i>{% if object.photo_cni %}Changer la photo{% else %}Ajouter une photo{% endif %}
-                        </label>
-                        <div class="form-text mb-0" id="photo-cni-filename">
-                            {% if object.photo_cni %}Fichier actuel : {{ object.photo_cni.name|cut:"clients/cni/" }}{% else %}Aucun fichier sélectionné.{% endif %}
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-person-vcard me-2"></i>Identité</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.nom_complet %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.telephone %}
+                                </div>
+                                <div class="col-12">
+                                    {% include "comptes/_field.html" with field=form.indicatif_pays %}
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-text">Photo ou scan lisible de la CNI (ou autre pièce d'identité).</div>
-                        {% if form.photo_cni.errors %}<div class="text-danger small mt-1">{{ form.photo_cni.errors }}</div>{% endif %}
                     </div>
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-file-earmark-image me-2"></i>Pièce d'identité</div>
+                        <div class="card-body">
+                            <div class="row align-items-center g-3">
+                                <div class="col-auto">
+                                    <label for="{{ form.photo_cni.id_for_label }}" class="photo-preview mb-0" role="button">
+                                        {% if object.photo_cni %}
+                                        <img src="{{ object.photo_cni.url }}" alt="Photo CNI" id="photo-cni-preview">
+                                        {% else %}
+                                        <img src="" alt="Photo CNI" id="photo-cni-preview" style="display:none;">
+                                        <span id="photo-cni-placeholder" class="photo-preview-placeholder">
+                                            <i class="bi bi-person-vcard"></i>
+                                        </span>
+                                        {% endif %}
+                                        <span class="photo-preview-overlay"><i class="bi bi-camera-fill"></i></span>
+                                    </label>
+                                </div>
+                                <div class="col">
+                                    <div class="visually-hidden">{{ form.photo_cni }}</div>
+                                    <label for="{{ form.photo_cni.id_for_label }}" class="btn btn-sm btn-outline-primary rounded-pill mb-1" role="button">
+                                        <i class="bi bi-upload me-1"></i>{% if object.photo_cni %}Changer la photo{% else %}Ajouter une photo{% endif %}
+                                    </label>
+                                    <div class="form-text mb-0" id="photo-cni-filename">
+                                        {% if object.photo_cni %}Fichier actuel : {{ object.photo_cni.name|cut:"clients/cni/" }}{% else %}Aucun fichier sélectionné.{% endif %}
+                                    </div>
+                                    <div class="form-text">Photo ou scan lisible de la CNI (ou autre pièce d'identité).</div>
+                                    {% if form.photo_cni.errors %}<div class="text-danger small mt-1">{{ form.photo_cni.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-telephone-forward me-2"></i>Contact d'urgence</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.contact_urgence_nom %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.contact_urgence_telephone %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Profil</div>
-                <div class="row">
-                    <div class="col-md-4">
-                        {% include "comptes/_field.html" with field=form.sexe %}
+                <!-- Colonne droite : profil sportif, mensurations, santé -->
+                <div class="col-lg-6 d-flex flex-column gap-4">
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-person-badge me-2"></i>Profil</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.sexe %}
+                                </div>
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.date_naissance %}
+                                </div>
+                                <div class="col-12">
+                                    {% include "comptes/_field.html" with field=form.objectif %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        {% include "comptes/_field.html" with field=form.date_naissance %}
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-rulers me-2"></i>Mensurations</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    {% include "comptes/_field.html" with field=form.taille %}
+                                </div>
+                                <div class="col-md-4">
+                                    {% include "comptes/_field.html" with field=form.poids %}
+                                </div>
+                                <div class="col-md-4">
+                                    {% include "comptes/_field.html" with field=form.bassin %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-4">
-                        {% include "comptes/_field.html" with field=form.objectif %}
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-heart-pulse me-2"></i>Santé</div>
+                        <div class="card-body">
+                            {% include "comptes/_field.html" with field=form.antecedents_medicaux %}
+                        </div>
                     </div>
+
                 </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Mensurations</div>
-                <div class="row">
-                    <div class="col-md-4">
-                        {% include "comptes/_field.html" with field=form.taille %}
-                    </div>
-                    <div class="col-md-4">
-                        {% include "comptes/_field.html" with field=form.poids %}
-                    </div>
-                    <div class="col-md-4">
-                        {% include "comptes/_field.html" with field=form.bassin %}
-                    </div>
-                </div>
+            </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Contact d'urgence</div>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.contact_urgence_nom %}
-                    </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.contact_urgence_telephone %}
-                    </div>
-                </div>
-
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Santé</div>
-                {% include "comptes/_field.html" with field=form.antecedents_medicaux %}
-
-                <div class="d-flex justify-content-between mt-3">
-                    <a href="{% url 'clients:client_detail' object.public_id %}" class="btn btn-danger">
-                        <i class="bi bi-x-lg me-1"></i>Annuler
-                    </a>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-lg me-1"></i>Enregistrer
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'clients:client_detail' object.public_id %}" class="btn btn-danger">
+                    <i class="bi bi-x-lg me-1"></i>Annuler
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg me-1"></i>Enregistrer
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

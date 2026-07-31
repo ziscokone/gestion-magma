@@ -5,4 +5,5 @@ app_name = 'etablissement'
 
 urlpatterns = [
     path('parametres/', views.ParametresView.as_view(), name='parametres'),
+    path('messages-whatsapp/', views.MessagesWhatsAppView.as_view(), name='messages_whatsapp'),
 ]

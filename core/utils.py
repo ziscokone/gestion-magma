@@ -1,3 +1,22 @@
+class _VariablesSansErreur(dict):
+    """Laisse une variable inconnue telle quelle (`{typo}`) plutôt que de
+    lever une KeyError — un message WhatsApp mal recopié par le personnel
+    ne doit jamais faire planter la page, juste afficher moins bien."""
+    def __missing__(self, cle):
+        return '{' + cle + '}'
+
+
+def rendre_gabarit_message(gabarit, variables):
+    """Injecte `variables` dans un gabarit de message texte (`str.format`)
+    configuré par l'utilisateur (ex: message de partage WhatsApp) — tolère
+    les variables inconnues et les accolades mal fermées sans lever d'erreur,
+    en repli sur le gabarit brut."""
+    try:
+        return gabarit.format_map(_VariablesSansErreur(variables))
+    except (ValueError, IndexError):
+        return gabarit
+
+
 def hex_vers_rgb(couleur_hex):
     """Convertit une couleur hexa ('#386745') en tuple RGB (56, 103, 69).
     Retourne (0, 0, 0) si la valeur est vide ou mal formée."""

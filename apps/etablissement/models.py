@@ -9,6 +9,17 @@ _VALIDATEUR_HEX = RegexValidator(
     message="Couleur au format hexadécimal, ex : #386745",
 )
 
+MESSAGE_PARTAGE_CARTE_DEFAUT = (
+    "Bonjour {client}, voici votre carte de membre {etablissement} "
+    "({type_abonnement}, valable jusqu'au {date_expiration}) :\n"
+    "{lien_carte}"
+)
+
+MESSAGE_RELANCE_DEFAUT = (
+    "Bonjour {client}, votre {type_abonnement} chez {etablissement} expire le {date_expiration} "
+    "({jours_restants} jour(s) restant(s)). Pensez à le renouveler pour ne pas perdre l'accès à la salle !"
+)
+
 
 class Etablissement(models.Model):
     """
@@ -45,6 +56,14 @@ class Etablissement(models.Model):
     solde_initial_caisse = models.PositiveIntegerField(
         default=0, verbose_name="Solde de caisse initial (FCFA)",
         help_text="Montant déjà en caisse au moment où vous commencez à utiliser le logiciel."
+    )
+    message_partage_carte = models.TextField(
+        default=MESSAGE_PARTAGE_CARTE_DEFAUT, verbose_name="Message de partage de la carte de membre",
+        help_text="Variables disponibles : {client}, {etablissement}, {type_abonnement}, {date_expiration}, {lien_carte}."
+    )
+    message_relance = models.TextField(
+        default=MESSAGE_RELANCE_DEFAUT, verbose_name="Message de relance avant expiration",
+        help_text="Variables disponibles : {client}, {etablissement}, {type_abonnement}, {date_expiration}, {jours_restants}."
     )
 
     date_creation = models.DateTimeField(auto_now_add=True)

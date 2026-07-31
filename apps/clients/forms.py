@@ -3,7 +3,7 @@ from django import forms
 from core.forms import NomUniqueMixin
 from core.indicatifs import CHOIX_INDICATIFS_PAYS
 
-from .models import Client, Seance, TypePrestation
+from .models import Client, ObjectifSportif, Seance, TypePrestation
 
 
 class TypePrestationChoiceField(forms.ModelChoiceField):
@@ -53,6 +53,21 @@ class ClientForm(forms.ModelForm):
             'contact_urgence_nom': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_urgence_telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'antecedents_medicaux': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['objectif'].queryset = ObjectifSportif.objects.filter(actif=True)
+        self.fields['objectif'].empty_label = "---------"
+
+
+class ObjectifSportifForm(NomUniqueMixin, forms.ModelForm):
+    class Meta:
+        model = ObjectifSportif
+        fields = ['nom', 'actif']
+        widgets = {
+            'nom': forms.TextInput(attrs={'class': 'form-control'}),
+            'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 

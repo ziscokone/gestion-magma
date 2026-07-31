@@ -22,3 +22,13 @@ class EtablissementForm(forms.ModelForm):
             'couleur_accent': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
             'solde_initial_caisse': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+
+class MessagesWhatsAppForm(forms.ModelForm):
+    class Meta:
+        model = Etablissement
+        fields = ['message_partage_carte', 'message_relance']
+        widgets = {
+            'message_partage_carte': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'message_relance': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+        }

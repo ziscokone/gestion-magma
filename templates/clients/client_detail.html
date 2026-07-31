@@ -38,7 +38,7 @@
                     <p class="mb-2"><strong>Date de naissance</strong><br>{{ client.date_naissance|date:"d/m/Y" }}</p>
                     {% endif %}
                     {% if client.objectif %}
-                    <p class="mb-2"><strong>Objectif</strong><br>{{ client.get_objectif_display }}</p>
+                    <p class="mb-2"><strong>Objectif</strong><br>{{ client.objectif.nom }}</p>
                     {% endif %}
                     {% endif %}
 

@@ -55,6 +55,12 @@
                         <i class="bi bi-tags-fill me-1"></i> Types de prestation
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'objectif_sportif' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'clients:objectif_sportif_list' %}">
+                        <i class="bi bi-bullseye me-1"></i> Objectifs sportifs
+                    </a>
+                </li>
                 {% endif %}
 
                 {# ── MODULE : ABONNEMENTS ─────────────────────────────── #}
