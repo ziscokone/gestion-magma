@@ -18,7 +18,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from core.pdf import BORDER, bandeau_entete, get_couleur_principale, pied_de_page
+from core.pdf import BORDER, ROW_ALT, bandeau_entete, get_couleur_principale, pied_de_page
 from core.qr import qr_drawing
 from core.utils import format_fcfa, montant_en_lettres
 
@@ -66,6 +66,45 @@ def _pied_avec_qr(styles, largeur, qr_data):
     return ligne
 
 
+def _styles_bloc_info(couleur):
+    """Hiérarchie typographique façon facture professionnelle : petit
+    intitulé de section en couleur d'accent, valeur principale en gras plus
+    grande, puis lignes secondaires grisées avec leur propre micro-légende."""
+    return {
+        'eyebrow': ParagraphStyle('bi_eyebrow', fontName='Helvetica-Bold', fontSize=8,
+                                   textColor=couleur, leading=10, spaceAfter=5),
+        'titre': ParagraphStyle('bi_titre', fontName='Helvetica-Bold', fontSize=12.5,
+                                 textColor=colors.HexColor('#1a1a1a'), leading=15, spaceAfter=2),
+        'meta': ParagraphStyle('bi_meta', fontName='Helvetica', fontSize=9.5,
+                                textColor=colors.HexColor('#5a5a5a'), leading=13),
+        'label': ParagraphStyle('bi_label', fontName='Helvetica-Bold', fontSize=7,
+                                 textColor=colors.HexColor('#9a9a9a'), leading=9, spaceBefore=5),
+    }
+
+
+def _bloc_info(largeur, couleur, eyebrow, titre, lignes):
+    """Une carte arrondie, liseré de couleur à gauche : intitulé de section,
+    valeur principale, puis paires (micro-légende, valeur) optionnelles."""
+    s = _styles_bloc_info(couleur)
+    contenu = [Paragraph(eyebrow, s['eyebrow']), Paragraph(titre, s['titre'])]
+    for label, valeur in lignes:
+        if label:
+            contenu.append(Paragraph(label, s['label']))
+        contenu.append(Paragraph(valeur, s['meta']))
+
+    carte = Table([[contenu]], colWidths=[largeur])
+    carte.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), ROW_ALT),
+        ('LINEBEFORE', (0, 0), (0, 0), 2.5, couleur),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 9),
+        ('ROUNDEDCORNERS', [6, 6, 6, 6]),
+    ]))
+    return carte
+
+
 def _montant_en_lettres_bloc(styles, largeur, intro, montant):
     style = ParagraphStyle('lettres', parent=styles['Normal'], fontName='Helvetica-Oblique',
                             fontSize=9, textColor=colors.HexColor('#495057'), leading=13)
@@ -96,26 +135,29 @@ def generer_fiche_abonnement_pdf(abonnement):
     ))
     elements.append(Spacer(1, 14 * mm))
 
-    infos = Table(
-        [[
-            Paragraph(
-                f"<b>CLIENT</b><br/>{abonnement.client.nom_complet}<br/>{abonnement.client.telephone}",
-                styles['Normal'],
-            ),
-            Paragraph(
-                f"<b>ABONNEMENT</b><br/>{abonnement.type_abonnement.nom}<br/>"
-                f"Du {abonnement.date_debut:%d/%m/%Y} au {abonnement.date_fin:%d/%m/%Y}<br/>"
-                f"Souscrit le {abonnement.date_souscription:%d/%m/%Y}",
-                styles['Normal'],
-            ),
-        ]],
-        colWidths=[FICHE_LARGEUR / 2, FICHE_LARGEUR / 2],
+    largeur_carte = (FICHE_LARGEUR - 6 * mm) / 2
+    carte_client = _bloc_info(
+        largeur_carte, couleur_principale, 'CLIENT', abonnement.client.nom_complet,
+        [(None, abonnement.client.telephone)],
     )
+    carte_abonnement = _bloc_info(
+        largeur_carte, couleur_principale, 'ABONNEMENT', abonnement.type_abonnement.nom,
+        [
+            ('PÉRIODE', f"{abonnement.date_debut:%d/%m/%Y} → {abonnement.date_fin:%d/%m/%Y}"),
+            ('SOUSCRIT LE', f"{abonnement.date_souscription:%d/%m/%Y}"),
+        ],
+    )
+    infos = Table([[carte_client, '', carte_abonnement]], colWidths=[largeur_carte, 6 * mm, largeur_carte])
+    infos.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
     elements.append(infos)
     elements.append(Spacer(1, 8 * mm))
 
     montant_table = Table(
-        [[f"MONTANT PAYÉ EN ESPÈCES : {format_fcfa(abonnement.montant)}"]],
+        [[f"MONTANT PAYÉ ({abonnement.mode_paiement_affiche.upper()}) : {format_fcfa(abonnement.montant)}"]],
         colWidths=[FICHE_LARGEUR],
     )
     montant_table.setStyle(TableStyle([

@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Répartition des clients par zone — MAGMA{% endblock %}
+
+{% block extra_css %}
+<style>
+.donut-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 40px;
+}
+.donut-svg-shell {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    flex-shrink: 0;
+    margin: 0 auto;
+}
+.donut-svg-shell svg { width: 100%; height: 100%; overflow: visible; }
+.donut-segment { cursor: pointer; transition: opacity .15s ease, filter .15s ease; transform-origin: 80px 80px; }
+.donut-segment:hover, .donut-segment:focus, .donut-segment.is-active { filter: brightness(1.1); outline: none; }
+.donut-svg-shell.has-hover .donut-segment:not(.is-active) { opacity: .32; }
+.donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    padding: 0 30px;
+}
+.donut-center-value { font-size: 2.1rem; font-weight: 700; color: #1a2e4a; line-height: 1; }
+.donut-center-label { font-size: .74rem; color: #9ca3af; margin-top: 6px; letter-spacing: .02em; text-transform: uppercase; }
+
+.legende-table { flex: 1; min-width: 280px; }
+.legende-table table { margin-bottom: 0; }
+.legende-table tbody tr { cursor: pointer; transition: background-color .12s ease; }
+.legende-swatch {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    margin-right: 9px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.legende-table tr.is-dominante td:first-child { font-weight: 600; }
+
+.zone-dominante-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(46, 204, 113, .08);
+    border: 1px solid rgba(46, 204, 113, .25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: .88rem;
+}
+.zone-dominante-banner strong { color: #1a2e4a; }
+
+.donut-tooltip {
+    position: fixed;
+    z-index: 2000;
+    background: #1a2e4a;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: .8rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .12s ease, transform .12s ease;
+    white-space: nowrap;
+}
+.donut-tooltip.is-visible { opacity: 1; transform: translateY(0); }
+.donut-tooltip strong { font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle accent"><i class="bi bi-people-fill"></i></div>
+                    <div class="text-start">
+                        <div class="stat-value">{{ total_clients }}</div>
+                        <div class="stat-label">Clients au total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle success"><i class="bi bi-star-fill"></i></div>
+                    <div class="text-start">
+                        <div class="stat-value" style="font-size:1.3rem;">{{ zone_dominante.nom|default:"—" }}</div>
+                        <div class="stat-label">Zone dominante{% if zone_dominante %} ({{ zone_dominante.nb_clients }} clients){% endif %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="stat-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon-circle warning"><i class="bi bi-geo-alt"></i></div>
+                    <div class="text-start">
+                        <div class="stat-value">{{ nb_sans_zone }}</div>
+                        <div class="stat-label">Clients sans quartier renseigné</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-pie-chart-fill me-2"></i>Répartition des clients par quartier</span>
+            {% if user.has_global_access %}
+            <a href="{% url 'clients:quartier_list' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-geo-alt me-1"></i>Gérer les quartiers
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if parts %}
+
+            {% if zone_dominante %}
+            <div class="zone-dominante-banner">
+                <i class="bi bi-star-fill" style="color: #2ecc71;"></i>
+                <span><strong>{{ zone_dominante.nom }}</strong> est la zone qui domine, avec {{ zone_dominante.nb_clients }} client{{ zone_dominante.nb_clients|pluralize }} ({{ zone_dominante.pourcentage }}% de la clientèle).</span>
+            </div>
+            {% endif %}
+
+            <div class="donut-wrap">
+                <div class="donut-svg-shell" id="donut-shell">
+                    <svg viewBox="0 0 160 160" role="img" aria-label="Répartition des clients par quartier">
+                        <circle cx="80" cy="80" r="{{ rayon }}" fill="none" stroke="rgba(0,0,0,.045)" stroke-width="24"></circle>
+                        <g transform="rotate(-90 80 80)">
+                            {% for part in parts %}
+                            <circle
+                                class="donut-segment"
+                                data-index="{{ part.index }}"
+                                cx="80" cy="80" r="{{ rayon }}" fill="none"
+                                stroke="{{ part.couleur }}" stroke-width="24"
+                                stroke-dasharray="{{ part.dash_len }} {{ circonference }}"
+                                stroke-dashoffset="{{ part.dash_offset }}"
+                                tabindex="0"
+                                data-label="{{ part.nom }}"
+                                data-value="{{ part.nb_clients }} client{{ part.nb_clients|pluralize }} — {{ part.pourcentage }}%">
+                                <title>{{ part.nom }} — {{ part.nb_clients }} client{{ part.nb_clients|pluralize }} ({{ part.pourcentage }}%)</title>
+                            </circle>
+                            {% endfor %}
+                        </g>
+                    </svg>
+                    <div class="donut-center">
+                        <div class="donut-center-value">{{ total_clients }}</div>
+                        <div class="donut-center-label">Client{{ total_clients|pluralize }}</div>
+                    </div>
+                </div>
+
+                <div class="legende-table">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Quartier</th>
+                                <th class="text-end">Clients</th>
+                                <th class="text-end">Part</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for part in parts %}
+                            <tr class="legende-row {% if zone_dominante and part.nom == zone_dominante.nom %}is-dominante{% endif %}" data-index="{{ part.index }}">
+                                <td>
+                                    <span class="legende-swatch" style="background-color: {{ part.couleur }};"></span>
+                                    {% if zone_dominante and part.nom == zone_dominante.nom %}<i class="bi bi-star-fill me-1" style="color: {{ part.couleur }};"></i>{% endif %}
+                                    {{ part.nom }}
+                                </td>
+                                <td class="text-end">{{ part.nb_clients }}</td>
+                                <td class="text-end text-muted">{{ part.pourcentage }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if reste %}
+            <hr class="my-4">
+            <div class="text-uppercase text-muted small fw-bold mb-2">
+                Détail des quartiers regroupés dans « Autres »
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Quartier</th>
+                            <th class="text-end">Clients</th>
+                            <th class="text-end">Part de la clientèle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for zone in reste %}
+                        <tr>
+                            <td><span class="legende-swatch" style="background-color: var(--color-accent);"></span>{{ zone.nom }}</td>
+                            <td class="text-end">{{ zone.nb_clients }}</td>
+                            <td class="text-end text-muted">{{ zone.pourcentage }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <p class="text-center text-muted py-4 mb-0">
+                Aucun client n'a de quartier renseigné pour le moment.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'donut-tooltip';
+    document.body.appendChild(tooltip);
+
+    function showTooltip(label, value, x, y) {
+        tooltip.textContent = '';
+        const strong = document.createElement('strong');
+        strong.textContent = label;
+        tooltip.appendChild(strong);
+        tooltip.appendChild(document.createTextNode(' — ' + value));
+        tooltip.style.left = (x + 14) + 'px';
+        tooltip.style.top = (y + 14) + 'px';
+        tooltip.classList.add('is-visible');
+    }
+    function hideTooltip() {
+        tooltip.classList.remove('is-visible');
+    }
+
+    const shell = document.getElementById('donut-shell');
+    const segments = document.querySelectorAll('.donut-segment');
+    const rows = document.querySelectorAll('.legende-row');
+
+    function setActive(index) {
+        if (!shell) { return; }
+        if (index === null) {
+            shell.classList.remove('has-hover');
+            segments.forEach(function (s) { s.classList.remove('is-active'); });
+            return;
+        }
+        shell.classList.add('has-hover');
+        segments.forEach(function (s) { s.classList.toggle('is-active', s.dataset.index === index); });
+    }
+
+    segments.forEach(function (segment) {
+        segment.addEventListener('pointermove', function (e) { showTooltip(segment.dataset.label, segment.dataset.value, e.clientX, e.clientY); });
+        segment.addEventListener('pointerenter', function (e) {
+            setActive(segment.dataset.index);
+            showTooltip(segment.dataset.label, segment.dataset.value, e.clientX, e.clientY);
+        });
+        segment.addEventListener('pointerleave', function () { setActive(null); hideTooltip(); });
+        segment.addEventListener('focus', function () {
+            setActive(segment.dataset.index);
+            const rect = segment.getBoundingClientRect();
+            showTooltip(segment.dataset.label, segment.dataset.value, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        });
+        segment.addEventListener('blur', function () { setActive(null); hideTooltip(); });
+    });
+
+    rows.forEach(function (row) {
+        row.addEventListener('pointerenter', function () { setActive(row.dataset.index); });
+        row.addEventListener('pointerleave', function () { setActive(null); });
+    });
+})();
+</script>
+{% endblock %}

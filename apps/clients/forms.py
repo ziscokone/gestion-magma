@@ -3,7 +3,7 @@ from django import forms
 from core.forms import NomUniqueMixin
 from core.indicatifs import CHOIX_INDICATIFS_PAYS
 
-from .models import Client, ObjectifSportif, Seance, TypePrestation
+from .models import Client, ObjectifSportif, Quartier, Seance, TypePrestation
 
 
 class TypePrestationChoiceField(forms.ModelChoiceField):
@@ -35,6 +35,7 @@ class ClientForm(forms.ModelForm):
         model = Client
         fields = [
             'nom_complet', 'telephone', 'indicatif_pays', 'photo_cni',
+            'quartier', 'adresse',
             'sexe', 'date_naissance', 'objectif',
             'taille', 'poids', 'bassin',
             'contact_urgence_nom', 'contact_urgence_telephone',
@@ -44,6 +45,8 @@ class ClientForm(forms.ModelForm):
             'nom_complet': forms.TextInput(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
             'photo_cni': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'quartier': forms.Select(attrs={'class': 'form-select'}),
+            'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'sexe': forms.Select(attrs={'class': 'form-select'}),
             'date_naissance': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'objectif': forms.Select(attrs={'class': 'form-select'}),
@@ -59,11 +62,23 @@ class ClientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['objectif'].queryset = ObjectifSportif.objects.filter(actif=True)
         self.fields['objectif'].empty_label = "---------"
+        self.fields['quartier'].queryset = Quartier.objects.filter(actif=True)
+        self.fields['quartier'].empty_label = "---------"
 
 
 class ObjectifSportifForm(NomUniqueMixin, forms.ModelForm):
     class Meta:
         model = ObjectifSportif
+        fields = ['nom', 'actif']
+        widgets = {
+            'nom': forms.TextInput(attrs={'class': 'form-control'}),
+            'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class QuartierForm(NomUniqueMixin, forms.ModelForm):
+    class Meta:
+        model = Quartier
         fields = ['nom', 'actif']
         widgets = {
             'nom': forms.TextInput(attrs={'class': 'form-control'}),

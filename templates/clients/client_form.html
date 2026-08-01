@@ -63,6 +63,20 @@
                     </div>
 
                     <div class="card">
+                        <div class="card-header"><i class="bi bi-geo-alt me-2"></i>Localisation</div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    {% include "comptes/_field.html" with field=form.quartier %}
+                                </div>
+                                <div class="col-12">
+                                    {% include "comptes/_field.html" with field=form.adresse %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
                         <div class="card-header"><i class="bi bi-telephone-forward me-2"></i>Contact d'urgence</div>
                         <div class="card-body">
                             <div class="row g-3">

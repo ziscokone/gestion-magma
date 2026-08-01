@@ -15,7 +15,9 @@ def active_module(request):
 
     app = match.app_name
 
-    if app == 'clients':
+    if app == 'dashboard':
+        module = 'dashboard'
+    elif app == 'clients':
         module = 'clients'
     elif app == 'abonnements':
         module = 'abonnements'

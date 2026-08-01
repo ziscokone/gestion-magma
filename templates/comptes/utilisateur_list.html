@@ -2,13 +2,45 @@
 
 {% block title %}Utilisateurs — MAGMA{% endblock %}
 
+{% block extra_css %}
+<style>
+.user-row-name { display: flex; align-items: center; gap: 12px; }
+.user-row-avatar {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .85rem; color: #fff;
+    box-shadow: 0 2px 6px -2px rgba(0,0,0,.3);
+}
+.user-row-name .name-text { font-weight: 600; color: var(--color-text-primary); }
+
+.role-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .76rem; font-weight: 700; padding: 4px 10px 4px 8px; border-radius: 20px;
+    white-space: nowrap;
+}
+.role-badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.role-super_admin { background: var(--color-danger-light); color: var(--color-danger); }
+.role-super_admin .dot { background: var(--color-danger); }
+.role-manager { background: var(--color-warning-light); color: #856404; }
+.role-manager .dot { background: #c9960a; }
+.role-utilisateur { background: #eef0f3; color: #5b6472; }
+.role-utilisateur .dot { background: #8b95a5; }
+
+.avatar-super_admin { background: linear-gradient(135deg, #e05b52, #b52b22); }
+.avatar-manager { background: linear-gradient(135deg, #f0b429, #c9960a); }
+.avatar-utilisateur { background: linear-gradient(135deg, #93a2b8, #5b6472); }
+
+.table > tbody > tr:hover { background-color: rgba(var(--color-accent-rgb), .035); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span><i class="bi bi-people-fill me-2"></i>Utilisateurs</span>
             {% if user.has_global_access %}
-            <a href="{% url 'comptes:utilisateur_create' %}" class="btn btn-sm btn-success">
+            <a href="{% url 'comptes:utilisateur_create' %}" class="btn btn-sm btn-accent">
                 <i class="bi bi-plus-lg me-1"></i>Ajouter
             </a>
             {% endif %}
@@ -18,11 +50,10 @@
                 <i class="bi bi-search"></i>
                 <input type="text" name="q" class="filter-search" placeholder="Rechercher..." value="{{ search_query }}">
             </form>
-            <table class="table">
+            <table class="table align-middle">
                 <thead>
                     <tr>
-                        <th>Nom complet</th>
-                        <th>Identifiant</th>
+                        <th>Utilisateur</th>
                         <th>Rôle</th>
                         <th>Téléphone</th>
                         <th>Statut</th>
@@ -32,9 +63,16 @@
                 <tbody>
                     {% for u in utilisateurs %}
                     <tr>
-                        <td>{{ u.nom_complet }}</td>
-                        <td>{{ u.username }}</td>
-                        <td>{{ u.get_role_display }}</td>
+                        <td>
+                            <div class="user-row-name">
+                                <span class="user-row-avatar avatar-{{ u.role }}">{{ u.nom_complet|first|upper }}</span>
+                                <div>
+                                    <div class="name-text">{{ u.nom_complet }}</div>
+                                    <div class="text-muted small">@{{ u.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="role-badge role-{{ u.role }}"><span class="dot"></span>{{ u.get_role_display }}</span></td>
                         <td>{{ u.telephone|default:"—" }}</td>
                         <td>
                             {% if u.actif %}
@@ -45,6 +83,7 @@
                         </td>
                         <td class="text-end">
                             {% if user.has_global_access %}
+                            {% if u.role != 'super_admin' or user.is_super_admin %}
                             <a href="{% url 'comptes:utilisateur_modules' u.pk %}" class="btn btn-sm btn-outline-primary" title="Modules autorisés">
                                 <i class="bi bi-grid"></i>
                             </a>
@@ -52,10 +91,11 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
                             {% endif %}
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-4">Aucun utilisateur.</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-4">Aucun utilisateur.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load format_tags %}
+
+{% block title %}Inventaire de départ — MAGMA{% endblock %}
+
+{% block extra_css %}
+<style>
+.info-banner {
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: .85rem;
+    color: var(--color-text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.info-banner i { color: var(--color-accent); font-size: 1.1rem; margin-top: 1px; }
+
+.categorie-row td {
+    background: var(--color-bg-main);
+    font-weight: 700;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--color-text-secondary);
+}
+.qte-input { max-width: 110px; }
+.badge-init {
+    font-size: .7rem;
+    background: var(--color-success-light);
+    color: var(--color-success);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-clipboard2-data me-2"></i>Inventaire de départ</span>
+            <a href="{% url 'stock:mouvement_list' %}" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left me-1"></i>Retour aux mouvements
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="info-banner">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>
+                    Renseignez la quantité déjà en stock pour chaque produit, avant de commencer à utiliser le logiciel.
+                    Ça crée un mouvement d'entrée (traçable comme les autres) mais <strong>sans aucune sortie de caisse</strong> —
+                    ce stock était déjà payé avant la mise en place, contrairement à un « Approvisionnement » classique.
+                </span>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if colonne_gauche or colonne_droite %}
+                <div class="row">
+                    <div class="col-lg-6 table-responsive">
+                        {% include "stock/_inventaire_colonne.html" with groupes=colonne_gauche %}
+                    </div>
+                    <div class="col-lg-6 table-responsive">
+                        {% include "stock/_inventaire_colonne.html" with groupes=colonne_droite %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-center text-muted py-4">Aucun produit actif.</p>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'stock:mouvement_list' %}" class="btn btn-danger">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i>Enregistrer l'inventaire
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

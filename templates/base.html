@@ -34,8 +34,16 @@
             {% if user.is_authenticated %}
             <ul class="navbar-nav me-auto">
 
+                {# ── MODULE : TABLEAU DE BORD ─────────────────────────── #}
+                {% if active_module == 'dashboard' %}
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'dashboard:accueil' %}">
+                        <i class="bi bi-speedometer2 me-1"></i> Tableau de bord
+                    </a>
+                </li>
+
                 {# ── MODULE : CLIENTS & SÉANCES ───────────────────────── #}
-                {% if active_module == 'clients' %}
+                {% elif active_module == 'clients' %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'seance_list' %}active{% endif %}"
                        href="{% url 'clients:seance_list' %}">
@@ -43,9 +51,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if 'client' in request.resolver_match.url_name %}active{% endif %}"
+                    <a class="nav-link {% if 'client' in request.resolver_match.url_name and 'repartition' not in request.resolver_match.url_name %}active{% endif %}"
                        href="{% url 'clients:client_list' %}">
                         <i class="bi bi-people me-1"></i> Clients
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'repartition' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'clients:client_repartition_zone' %}">
+                        <i class="bi bi-pie-chart me-1"></i> Répartition par zone
                     </a>
                 </li>
                 {% if user.has_global_access %}
@@ -59,6 +73,12 @@
                     <a class="nav-link {% if 'objectif_sportif' in request.resolver_match.url_name %}active{% endif %}"
                        href="{% url 'clients:objectif_sportif_list' %}">
                         <i class="bi bi-bullseye me-1"></i> Objectifs sportifs
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'quartier' in request.resolver_match.url_name %}active{% endif %}"
+                       href="{% url 'clients:quartier_list' %}">
+                        <i class="bi bi-geo-alt-fill me-1"></i> Quartiers
                     </a>
                 </li>
                 {% endif %}

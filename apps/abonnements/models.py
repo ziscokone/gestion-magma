@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from django.db import models
 
+from core.models import ModePaiementMixin
 from core.utils import format_fcfa
 from apps.clients.models import Client
 
@@ -29,10 +30,11 @@ class TypeAbonnement(models.Model):
         return f"{self.nom} — {format_fcfa(self.prix)} ({self.duree_jours} j)"
 
 
-class Abonnement(models.Model):
+class Abonnement(ModePaiementMixin, models.Model):
     """
-    Souscription payée en une seule fois, en espèces, à la création — pas de
-    paiement fractionné ni d'autre mode de paiement pour ce module.
+    Souscription payée en une seule fois à la création — pas de paiement
+    fractionné, mais le moyen de paiement (espèces, Mobile Money + opérateur,
+    autre) est renseigné comme pour une séance.
     """
 
     public_id = models.UUIDField(

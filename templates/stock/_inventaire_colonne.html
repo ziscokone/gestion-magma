@@ -1,0 +1,29 @@
+<table class="table align-middle table-sm">
+    <thead>
+        <tr>
+            <th>Produit</th>
+            <th>Stock actuel</th>
+            <th style="width:130px;">Départ</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for categorie, produits in groupes %}
+        <tr class="categorie-row"><td colspan="3">{{ categorie.nom }}</td></tr>
+        {% for produit in produits %}
+        <tr>
+            <td>
+                {{ produit.nom }}
+                {% if produit.pk in deja_initialises %}
+                <span class="badge badge-init ms-1" title="Déjà initialisé"><i class="bi bi-check-circle-fill"></i></span>
+                {% endif %}
+            </td>
+            <td class="text-muted">{{ produit.stock_actuel }} {{ produit.get_unite_display|lower }}(s)</td>
+            <td>
+                <input type="number" min="1" step="1" name="qte_{{ produit.pk }}"
+                       class="form-control form-control-sm qte-input" placeholder="0">
+            </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>

@@ -12,9 +12,11 @@ from django.views import View
 from django.views.generic import ListView, DetailView, UpdateView, CreateView, DeleteView
 
 from core.mixins import AdminRequiredMixin
+from core.models import modes_paiement_filtrables
 from apps.abonnements.models import Abonnement
-from .forms import SeanceForm, ClientForm, ObjectifSportifForm, TypePrestationForm
-from .models import Client, ObjectifSportif, Seance, TypePrestation
+from .forms import SeanceForm, ClientForm, ObjectifSportifForm, QuartierForm, TypePrestationForm
+from .models import Client, ObjectifSportif, Quartier, Seance, TypePrestation
+from .services import repartition_clients_par_zone
 
 
 class SeanceListView(LoginRequiredMixin, ListView):
@@ -24,7 +26,7 @@ class SeanceListView(LoginRequiredMixin, ListView):
     context_object_name = 'seances'
     paginate_by = 15
 
-    def get_queryset(self):
+    def _queryset_jour(self):
         queryset = Seance.objects.select_related('client', 'type_prestation').all()
         jour = self.request.GET.get('date')
         if jour:
@@ -33,10 +35,33 @@ class SeanceListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(date__date=date.today())
         return queryset
 
+    def get_queryset(self):
+        queryset = self._queryset_jour()
+        paiement = self.request.GET.get('paiement', 'tous')
+        for cle, _, filtre, _ in modes_paiement_filtrables():
+            if paiement == cle:
+                return queryset.filter(**filtre)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['date_filtre'] = self.request.GET.get('date', date.today().isoformat())
-        context['recette_jour'] = self.get_queryset().aggregate(total=Sum('montant'))['total'] or 0
+        context['paiement_filtre'] = self.request.GET.get('paiement', 'tous')
+        context['modes_paiement'] = [(cle, libelle) for cle, libelle, _, _ in modes_paiement_filtrables()]
+
+        queryset_jour = self._queryset_jour()
+        context['recette_jour'] = queryset_jour.aggregate(total=Sum('montant'))['total'] or 0
+
+        repartition = []
+        for cle, libelle, filtre, couleur in modes_paiement_filtrables():
+            sous_ensemble = queryset_jour.filter(**filtre)
+            nombre = sous_ensemble.count()
+            if nombre:
+                repartition.append({
+                    'cle': cle, 'libelle': libelle, 'couleur': couleur, 'nombre': nombre,
+                    'montant': sous_ensemble.aggregate(total=Sum('montant'))['total'] or 0,
+                })
+        context['repartition_paiement'] = repartition
         return context
 
 
@@ -113,6 +138,17 @@ class ClientListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '')
         return context
+
+
+class ClientRepartitionZoneView(LoginRequiredMixin, View):
+    """Répartition des clients par quartier/zone, sous forme de camembert — met
+    en évidence la zone dominante. Au-delà de 6 quartiers peuplés, les plus
+    petits sont regroupés dans une part "Autres" pour garder le graphique lisible ;
+    le tableau en dessous, lui, détaille chaque quartier individuellement."""
+    template_name = 'clients/repartition_zone.html'
+
+    def get(self, request):
+        return render(request, self.template_name, repartition_clients_par_zone())
 
 
 class ClientDetailView(LoginRequiredMixin, DetailView):
@@ -252,3 +288,51 @@ class ObjectifSportifDeleteView(AdminRequiredMixin, DeleteView):
                 "Désactivez-le plutôt depuis le formulaire de modification."
             )
             return redirect('clients:objectif_sportif_list')
+
+
+class QuartierListView(AdminRequiredMixin, ListView):
+    """Configuration des quartiers/zones proposés aux clients — Super Admin / Manager."""
+    model = Quartier
+    template_name = 'clients/quartier_list.html'
+    context_object_name = 'quartiers'
+    paginate_by = 10
+
+
+class QuartierCreateView(AdminRequiredMixin, CreateView):
+    model = Quartier
+    form_class = QuartierForm
+    template_name = 'clients/quartier_form.html'
+    success_url = reverse_lazy('clients:quartier_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Quartier créé avec succès.')
+        return super().form_valid(form)
+
+
+class QuartierUpdateView(AdminRequiredMixin, UpdateView):
+    model = Quartier
+    form_class = QuartierForm
+    template_name = 'clients/quartier_form.html'
+    success_url = reverse_lazy('clients:quartier_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Quartier modifié avec succès.')
+        return super().form_valid(form)
+
+
+class QuartierDeleteView(AdminRequiredMixin, DeleteView):
+    model = Quartier
+    template_name = 'clients/quartier_confirm_delete.html'
+    success_url = reverse_lazy('clients:quartier_list')
+
+    def form_valid(self, form):
+        try:
+            messages.success(self.request, 'Quartier supprimé avec succès.')
+            return super().form_valid(form)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                "Impossible de supprimer ce quartier : des clients y sont déjà rattachés. "
+                "Désactivez-le plutôt depuis le formulaire de modification."
+            )
+            return redirect('clients:quartier_list')

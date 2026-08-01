@@ -16,6 +16,7 @@ urlpatterns = [
     path('mouvements/rapport/', views.RapportMouvementsView.as_view(), name='rapport_mouvements'),
     path('mouvements/rapport.pdf', views.RapportMouvementsPDFView.as_view(), name='rapport_mouvements_pdf'),
     path('mouvements/approvisionnement/', views.ApprovisionnementCreateView.as_view(), name='approvisionnement_create'),
+    path('mouvements/inventaire-initial/', views.InventaireInitialView.as_view(), name='inventaire_initial'),
     path('mouvements/vente/', views.VenteCreateView.as_view(), name='vente_create'),
     path('mouvements/vente/<int:pk>/confirmation/', views.VenteConfirmationView.as_view(), name='vente_confirmation'),
     path('mouvements/vente/<int:pk>/ticket.pdf', views.VenteTicketPDFView.as_view(), name='vente_ticket_pdf'),

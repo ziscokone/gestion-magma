@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.abonnements',
     'apps.stock',
     'apps.budget',
+    'apps.dashboard',
 ]
 
 MIDDLEWARE = [
@@ -90,12 +91,10 @@ DATABASES = {
 AUTH_USER_MODEL = 'comptes.Utilisateur'
 
 
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
+
+# Pas de contraintes de complexité — l'établissement gère lui-même les mots
+# de passe de son (petit) effectif, pas de création de compte public.
+AUTH_PASSWORD_VALIDATORS = []
 
 AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',

@@ -27,6 +27,14 @@
                         <option value="expires" {% if statut_filtre == 'expires' %}selected{% endif %}>Expirés</option>
                     </select>
                 </div>
+                <div class="col-auto">
+                    <select name="paiement" class="filter-select">
+                        <option value="tous" {% if paiement_filtre == 'tous' %}selected{% endif %}>Tous les moyens de paiement</option>
+                        {% for cle, libelle in modes_paiement %}
+                        <option value="{{ cle }}" {% if paiement_filtre == cle %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-auto flex-grow-1 filter-search-wrap">
                     <i class="bi bi-search"></i>
                     <input type="text" name="q" class="filter-search" placeholder="Rechercher un client..." value="{{ search_query }}">
@@ -38,14 +46,29 @@
                 </div>
             </form>
 
+            {% if repartition_paiement %}
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% for r in repartition_paiement %}
+                <div class="paiement-chip">
+                    <span class="dot" style="background:{{ r.couleur }};"></span>
+                    <span class="libelle">{{ r.libelle }}</span>
+                    <span class="nombre">{{ r.nombre }} abonnement{{ r.nombre|pluralize }}</span>
+                    <span class="montant">{{ r.montant|fcfa }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <table class="table">
                 <thead>
                     <tr>
                         <th>Client</th>
+                        <th>Créé le</th>
                         <th>Type</th>
                         <th>Début</th>
                         <th>Expiration</th>
                         <th>Montant</th>
+                        <th>Paiement</th>
                         <th>Statut</th>
                         <th></th>
                     </tr>
@@ -59,10 +82,12 @@
                             </a>
                             <div class="text-muted small">{{ abonnement.client.telephone }}</div>
                         </td>
+                        <td class="text-muted small">{{ abonnement.date_souscription|date:"d/m/Y H:i" }}</td>
                         <td>{{ abonnement.type_abonnement.nom }}</td>
                         <td>{{ abonnement.date_debut|date:"d/m/Y" }}</td>
                         <td>{{ abonnement.date_fin|date:"d/m/Y" }}</td>
                         <td>{{ abonnement.montant|fcfa }}</td>
+                        <td>{{ abonnement.mode_paiement_affiche }}</td>
                         <td>
                             {% if abonnement.statut == 'expire' %}
                             <span class="badge badge-reserve">Expiré</span>
@@ -84,7 +109,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-4">Aucun abonnement.</td></tr>
+                    <tr><td colspan="9" class="text-center text-muted py-4">Aucun abonnement.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

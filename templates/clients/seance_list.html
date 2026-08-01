@@ -18,6 +18,14 @@
                     <input type="date" name="date" class="filter-input" value="{{ date_filtre }}">
                 </div>
                 <div class="col-auto">
+                    <select name="paiement" class="filter-select">
+                        <option value="tous" {% if paiement_filtre == 'tous' %}selected{% endif %}>Tous les moyens de paiement</option>
+                        {% for cle, libelle in modes_paiement %}
+                        <option value="{{ cle }}" {% if paiement_filtre == cle %}selected{% endif %}>{{ libelle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
                     <button type="submit" class="btn btn-outline-primary rounded-pill">
                         Filtrer
                     </button>
@@ -29,6 +37,19 @@
                     </div>
                 </div>
             </form>
+
+            {% if repartition_paiement %}
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% for r in repartition_paiement %}
+                <div class="paiement-chip">
+                    <span class="dot" style="background:{{ r.couleur }};"></span>
+                    <span class="libelle">{{ r.libelle }}</span>
+                    <span class="nombre">{{ r.nombre }} séance{{ r.nombre|pluralize }}</span>
+                    <span class="montant">{{ r.montant|fcfa }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
 
             <table class="table">
                 <thead>

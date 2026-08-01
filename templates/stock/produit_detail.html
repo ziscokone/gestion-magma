@@ -3,6 +3,15 @@
 
 {% block title %}{{ produit.nom }} — MAGMA{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Tuiles Stock plus étroites (2 par ligne dans une colonne latérale) —
+   il faut moins de place pour que le montant tienne sur une seule ligne. */
+.stock-summary .stat-card { padding: .9rem .6rem; }
+.stock-summary .stat-value { font-size: 1.2rem; white-space: nowrap; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="row">
@@ -30,7 +39,7 @@
                 <div class="card-header">
                     <i class="bi bi-bar-chart me-2"></i>Stock
                 </div>
-                <div class="card-body">
+                <div class="card-body stock-summary">
                     <div class="row mb-3">
                         <div class="col-6">
                             <div class="stat-card">
@@ -76,10 +85,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-clock-history me-2"></i>Historique des mouvements</span>
                     <div class="d-flex gap-2">
-                        <a href="{% url 'stock:approvisionnement_create' %}?produit={{ produit.pk }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{% url 'stock:approvisionnement_create' %}?produit={{ produit.pk }}" class="btn btn-sm btn-secondary-brand">
                             <i class="bi bi-box-arrow-in-down me-1"></i>Approvisionner
                         </a>
-                        <a href="{% url 'stock:vente_create' %}?produit={{ produit.pk }}" class="btn btn-sm btn-success">
+                        <a href="{% url 'stock:vente_create' %}?produit={{ produit.pk }}" class="btn btn-sm btn-accent">
                             <i class="bi bi-cart-check me-1"></i>Vendre
                         </a>
                     </div>

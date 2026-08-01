@@ -64,7 +64,7 @@
                             <div class="stat-icon-circle success"><i class="bi bi-cash-stack"></i></div>
                             <div class="text-start">
                                 <div class="stat-value">{{ abonnement.montant|fcfa }}</div>
-                                <div class="stat-label">Payé en espèces le {{ abonnement.date_souscription|date:"d/m/Y" }}</div>
+                                <div class="stat-label">Payé en {{ abonnement.mode_paiement_affiche }} le {{ abonnement.date_souscription|date:"d/m/Y" }}</div>
                             </div>
                         </div>
                     </div>
@@ -83,7 +83,7 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-3">
-                        N° <strong>{{ abonnement.numero_recu }}</strong> — {{ abonnement.montant|fcfa }}, réglé en espèces
+                        N° <strong>{{ abonnement.numero_recu }}</strong> — {{ abonnement.montant|fcfa }}, réglé en {{ abonnement.mode_paiement_affiche }}
                         le {{ abonnement.date_souscription|date:"d/m/Y" }}.
                     </p>
                     <a href="{% url 'abonnements:abonnement_fiche_pdf' abonnement.pk %}" target="_blank" class="btn btn-outline-primary">

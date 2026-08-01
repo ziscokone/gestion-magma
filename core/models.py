@@ -50,6 +50,21 @@ class ModePaiementMixin(models.Model):
         return self.get_mode_paiement_display()
 
 
+def modes_paiement_filtrables():
+    """Liste (clé, libellé, filtre ORM, couleur) pour filtrer/regrouper une
+    liste par moyen de paiement — un « mobile money » seul ne dit pas sur
+    quel compte chercher le dépôt, donc on éclate par opérateur. Réutilisée
+    par les séances et les abonnements."""
+    return [
+        ('especes', 'Espèces', {'mode_paiement': 'especes'}, 'var(--color-accent)'),
+        ('wave', 'Wave', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'wave'}, ModePaiementMixin.OPERATEUR_COULEURS['wave']),
+        ('orange', 'Orange Money', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'orange'}, ModePaiementMixin.OPERATEUR_COULEURS['orange']),
+        ('mtn', 'MTN Money', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'mtn'}, ModePaiementMixin.OPERATEUR_COULEURS['mtn']),
+        ('moov', 'Moov Money', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'moov'}, ModePaiementMixin.OPERATEUR_COULEURS['moov']),
+        ('autre', 'Autre', {'mode_paiement': 'autre'}, '#6c757d'),
+    ]
+
+
 class PaiementMixin(ModePaiementMixin):
     """
     Pour une transaction payée en une seule fois (ex: une séance) : mode de

@@ -295,6 +295,21 @@ a:hover {
     color: #FFFFFF;
 }
 
+/* Bouton en couleur secondaire de l'établissement (fond clair) — pour une
+   action à mettre en avant sans lui donner le même poids que le bouton
+   d'accent (ex: « Approvisionnement » à côté de « Nouvelle vente »). */
+.btn-secondary-brand {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: var(--color-text-primary);
+}
+
+.btn-secondary-brand:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #FFFFFF;
+}
+
 .btn-outline-primary {
     color: var(--color-accent);
     border-color: var(--color-accent);
@@ -305,6 +320,41 @@ a:hover {
     border-color: var(--color-hover);
     color: #FFFFFF;
 }
+
+/* ==========================================================================
+   Formulaires sectionnés (carte flottante + sous-cartes à en-tête icône) —
+   utilisateurs, abonnements... tout formulaire à plusieurs blocs thématiques.
+   ========================================================================== */
+
+.form-section-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; border-bottom: 1px solid var(--color-border);
+}
+.form-section-icon {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.form-section-icon.identite    { background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover)); }
+.form-section-icon.compte      { background: linear-gradient(135deg, #5b82c0, #3a5f9a); }
+.form-section-icon.securite    { background: linear-gradient(135deg, #e05b52, #b52b22); }
+.form-section-icon.statut      { background: linear-gradient(135deg, #93a2b8, #5b6472); }
+.form-section-icon.abonnement  { background: linear-gradient(135deg, #2ecc71, #1a9e55); }
+.form-section-icon.paiement    { background: linear-gradient(135deg, #a05dc8, #7b3fa8); }
+.form-section-title { font-weight: 700; font-size: .92rem; margin: 0; }
+.form-section-body { padding: 18px 20px 6px; }
+
+/* Puces de répartition par moyen de paiement (séances, abonnements...) */
+.paiement-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+.paiement-chip .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.paiement-chip .libelle { font-weight: 600; font-size: .85rem; }
+.paiement-chip .nombre { font-size: .74rem; color: var(--color-text-secondary); }
+.paiement-chip .montant { font-weight: 700; font-size: .9rem; margin-left: 4px; }
 
 /* ==========================================================================
    Formulaires
@@ -609,6 +659,40 @@ a:hover {
 
 .dropdown-item {
     padding: 0.4rem 1rem;
+}
+
+/* Menus déroulants placés dans un en-tête de carte (ex: bouton
+   "Approvisionnement" du module Stock) — même logique de survol en couleur
+   d'accent que la navbar, avec un rendu plus flottant (ombre, coins ronds). */
+.card-header .dropdown-menu {
+    border: none;
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    padding: 0.4rem;
+    margin-top: 8px !important;
+}
+
+.card-header .dropdown-item {
+    padding: 0.55rem 0.9rem;
+    border-radius: 7px;
+    color: var(--color-text-primary);
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.card-header .dropdown-item i {
+    color: var(--color-accent);
+    transition: color .15s ease;
+}
+
+.card-header .dropdown-item:hover,
+.card-header .dropdown-item:focus {
+    background-color: var(--color-hover);
+    color: #FFFFFF;
+}
+
+.card-header .dropdown-item:hover i,
+.card-header .dropdown-item:focus i {
+    color: #FFFFFF;
 }
 
 .dropdown-header {

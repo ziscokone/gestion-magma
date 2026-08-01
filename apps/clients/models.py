@@ -23,6 +23,22 @@ class ObjectifSportif(models.Model):
         return self.nom
 
 
+class Quartier(models.Model):
+    """Zones/quartiers configurables, utilisés pour localiser les clients et
+    analyser leur répartition géographique — modifiable depuis l'interface,
+    sans toucher au code."""
+    nom = models.CharField(max_length=100, unique=True, verbose_name="Nom")
+    actif = models.BooleanField(default=True, verbose_name="Actif")
+
+    class Meta:
+        ordering = ['nom']
+        verbose_name = "Quartier"
+        verbose_name_plural = "Quartiers"
+
+    def __str__(self):
+        return self.nom
+
+
 class Client(models.Model):
     SEXE_CHOICES = [
         ('M', 'Masculin'),
@@ -37,6 +53,12 @@ class Client(models.Model):
         help_text="À renseigner uniquement si ce client n'est pas dans le pays par défaut de l'établissement."
     )
     nom_complet = models.CharField(max_length=200, verbose_name="Nom complet")
+
+    quartier = models.ForeignKey(
+        Quartier, on_delete=models.PROTECT, null=True, blank=True,
+        related_name='clients', verbose_name="Quartier / zone"
+    )
+    adresse = models.TextField(blank=True, verbose_name="Adresse")
 
     sexe = models.CharField(max_length=1, choices=SEXE_CHOICES, blank=True, verbose_name="Sexe")
     date_naissance = models.DateField(null=True, blank=True, verbose_name="Date de naissance")

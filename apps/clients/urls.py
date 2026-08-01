@@ -9,6 +9,7 @@ urlpatterns = [
     path('api/rechercher-client/', views.rechercher_client, name='rechercher_client'),
     path('api/suggerer-clients/', views.suggerer_clients, name='suggerer_clients'),
     path('liste/', views.ClientListView.as_view(), name='client_list'),
+    path('repartition-zone/', views.ClientRepartitionZoneView.as_view(), name='client_repartition_zone'),
 
     path('types-prestation/', views.TypePrestationListView.as_view(), name='type_prestation_list'),
     path('types-prestation/ajouter/', views.TypePrestationCreateView.as_view(), name='type_prestation_create'),
@@ -19,6 +20,11 @@ urlpatterns = [
     path('objectifs/ajouter/', views.ObjectifSportifCreateView.as_view(), name='objectif_sportif_create'),
     path('objectifs/<int:pk>/modifier/', views.ObjectifSportifUpdateView.as_view(), name='objectif_sportif_update'),
     path('objectifs/<int:pk>/supprimer/', views.ObjectifSportifDeleteView.as_view(), name='objectif_sportif_delete'),
+
+    path('quartiers/', views.QuartierListView.as_view(), name='quartier_list'),
+    path('quartiers/ajouter/', views.QuartierCreateView.as_view(), name='quartier_create'),
+    path('quartiers/<int:pk>/modifier/', views.QuartierUpdateView.as_view(), name='quartier_update'),
+    path('quartiers/<int:pk>/supprimer/', views.QuartierDeleteView.as_view(), name='quartier_delete'),
 
     path('<uuid:public_id>/', views.ClientDetailView.as_view(), name='client_detail'),
     path('<uuid:public_id>/modifier/', views.ClientUpdateView.as_view(), name='client_update'),

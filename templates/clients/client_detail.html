@@ -29,6 +29,16 @@
                         {% endif %}
                     </div>
 
+                    {% if client.quartier or client.adresse %}
+                    <div class="text-uppercase text-muted small fw-bold mb-2 mt-3">Localisation</div>
+                    {% if client.quartier %}
+                    <p class="mb-2"><strong>Quartier</strong><br>{{ client.quartier.nom }}</p>
+                    {% endif %}
+                    {% if client.adresse %}
+                    <p class="mb-2"><strong>Adresse</strong><br>{{ client.adresse|linebreaksbr }}</p>
+                    {% endif %}
+                    {% endif %}
+
                     {% if client.sexe or client.date_naissance or client.objectif %}
                     <div class="text-uppercase text-muted small fw-bold mb-2 mt-3">Profil</div>
                     {% if client.sexe %}

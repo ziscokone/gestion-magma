@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.db.models.deletion import ProtectedError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -14,6 +14,7 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from core.mixins import AdminRequiredMixin
+from core.models import modes_paiement_filtrables
 from core.qr import qr_code_data_uri
 from core.utils import rendre_gabarit_message
 from apps.clients.models import Client
@@ -49,7 +50,10 @@ class AbonnementListView(LoginRequiredMixin, ListView):
     context_object_name = 'abonnements'
     paginate_by = 15
 
-    def get_queryset(self):
+    def _queryset_statut_recherche(self):
+        """Filtres statut + recherche, sans le filtre moyen de paiement — sert
+        à la fois à la liste et au calcul de la répartition par moyen de
+        paiement (qui doit rester complète même quand on filtre sur un seul)."""
         queryset = Abonnement.objects.select_related('client', 'type_abonnement').all()
         today = date.today()
         statut = self.request.GET.get('statut', 'tous')
@@ -67,10 +71,33 @@ class AbonnementListView(LoginRequiredMixin, ListView):
             )
         return queryset
 
+    def get_queryset(self):
+        queryset = self._queryset_statut_recherche()
+        paiement = self.request.GET.get('paiement', 'tous')
+        for cle, _, filtre, _ in modes_paiement_filtrables():
+            if paiement == cle:
+                queryset = queryset.filter(**filtre)
+                break
+        return queryset.order_by('-date_souscription')
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['statut_filtre'] = self.request.GET.get('statut', 'tous')
         context['search_query'] = self.request.GET.get('q', '')
+        context['paiement_filtre'] = self.request.GET.get('paiement', 'tous')
+        context['modes_paiement'] = [(cle, libelle) for cle, libelle, _, _ in modes_paiement_filtrables()]
+
+        queryset_base = self._queryset_statut_recherche()
+        repartition = []
+        for cle, libelle, filtre, couleur in modes_paiement_filtrables():
+            sous_ensemble = queryset_base.filter(**filtre)
+            nombre = sous_ensemble.count()
+            if nombre:
+                repartition.append({
+                    'cle': cle, 'libelle': libelle, 'couleur': couleur, 'nombre': nombre,
+                    'montant': sous_ensemble.aggregate(total=Sum('montant'))['total'] or 0,
+                })
+        context['repartition_paiement'] = repartition
         return context
 
 
@@ -114,6 +141,8 @@ class AbonnementCreateView(LoginRequiredMixin, View):
                 date_debut=date_debut,
                 date_fin=date_debut + timedelta(days=type_abonnement.duree_jours),
                 montant=type_abonnement.prix,
+                mode_paiement=form.cleaned_data['mode_paiement'],
+                operateur_mobile_money=form.cleaned_data.get('operateur_mobile_money', ''),
                 enregistre_par=request.user,
             )
 

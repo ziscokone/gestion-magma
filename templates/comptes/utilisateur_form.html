@@ -2,62 +2,125 @@
 
 {% block title %}{% if object %}Modifier{% else %}Ajouter{% endif %} un utilisateur — MAGMA{% endblock %}
 
+{% block extra_css %}
+<style>
+.role-hint {
+    background: var(--color-bg-main); border: 1px solid var(--color-border); border-radius: 10px;
+    padding: 10px 14px; font-size: .78rem; color: var(--color-text-secondary); margin: -6px 0 18px;
+}
+.role-hint strong { color: var(--color-text-primary); }
+
+.password-hint { font-size: .78rem; color: var(--color-text-secondary); margin-top: -10px; margin-bottom: 16px; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    <div class="card" style="max-width: 760px; margin: 0 auto;">
-        <div class="card-header">
-            <i class="bi bi-person-plus me-2"></i>{% if object %}Modifier l'utilisateur{% else %}Ajouter un utilisateur{% endif %}
-        </div>
-        <div class="card-body p-4">
-            <form method="post">
-                {% csrf_token %}
+    <div style="max-width: 1080px; margin: 0 auto; background: var(--color-bg-card); border-radius: 10px; box-shadow: var(--shadow-md); overflow: hidden;">
 
-                <div class="text-uppercase text-muted small fw-bold mb-2">Identité</div>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.nom_complet %}
+        <div class="d-flex align-items-center gap-3" style="background: var(--color-accent); padding: 1.1rem 1.75rem;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi {% if object %}bi-person-gear{% else %}bi-person-plus{% endif %}" style="font-size:1.2rem;color:#fff;"></i>
+            </div>
+            <div>
+                <h4 class="mb-0" style="color:#fff;">{% if object %}Modifier l'utilisateur{% else %}Ajouter un utilisateur{% endif %}</h4>
+                {% if object %}<div class="small" style="color:rgba(255,255,255,.75);">@{{ object.username }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div style="padding: 1.75rem;">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-4">
+
+                <!-- Colonne gauche : identité + compte & accès -->
+                <div class="col-lg-6 d-flex flex-column gap-4">
+
+                    <div class="card">
+                        <div class="form-section-head">
+                            <div class="form-section-icon identite"><i class="bi bi-person-vcard"></i></div>
+                            <h6 class="form-section-title">Identité</h6>
+                        </div>
+                        <div class="form-section-body">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    {% include "comptes/_field.html" with field=form.nom_complet %}
+                                </div>
+                                <div class="col-md-5">
+                                    {% include "comptes/_field.html" with field=form.telephone %}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.telephone %}
+
+                    <div class="card">
+                        <div class="form-section-head">
+                            <div class="form-section-icon compte"><i class="bi bi-shield-lock"></i></div>
+                            <h6 class="form-section-title">Compte &amp; accès</h6>
+                        </div>
+                        <div class="form-section-body">
+                            <div class="row">
+                                {% if form.username %}
+                                <div class="col-md-6">
+                                    {% include "comptes/_field.html" with field=form.username %}
+                                </div>
+                                {% endif %}
+                                <div class="{% if form.username %}col-md-6{% else %}col-12{% endif %}">
+                                    {% include "comptes/_field.html" with field=form.role %}
+                                </div>
+                            </div>
+                            <div class="role-hint">
+                                <strong>Super Administrateur</strong> : accès total, seul à pouvoir supprimer un utilisateur ou modifier les paramètres de l'établissement.<br>
+                                <strong>Manager</strong> : mêmes droits de gestion, sauf ces deux actions.<br>
+                                <strong>Utilisateur</strong> : accès limité aux modules qui lui sont attribués (voir « Modules autorisés » depuis la liste).
+                            </div>
+                        </div>
                     </div>
+
                 </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Compte & accès</div>
-                <div class="row">
-                    {% if form.username %}
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.username %}
+                <!-- Colonne droite : sécurité + statut -->
+                <div class="col-lg-6 d-flex flex-column gap-4">
+
+                    {% if form.password1 %}
+                    <div class="card">
+                        <div class="form-section-head">
+                            <div class="form-section-icon securite"><i class="bi bi-key"></i></div>
+                            <h6 class="form-section-title">Sécurité</h6>
+                        </div>
+                        <div class="form-section-body">
+                            {% if object %}
+                            <p class="password-hint"><i class="bi bi-info-circle me-1"></i>{{ form.password1.help_text }}</p>
+                            {% endif %}
+                            {% include "comptes/_field.html" with field=form.password1 %}
+                            {% include "comptes/_field.html" with field=form.password2 %}
+                        </div>
                     </div>
                     {% endif %}
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.role %}
+
+                    <div class="card">
+                        <div class="form-section-head">
+                            <div class="form-section-icon statut"><i class="bi bi-toggle-on"></i></div>
+                            <h6 class="form-section-title">Statut</h6>
+                        </div>
+                        <div class="form-section-body">
+                            {% include "comptes/_field.html" with field=form.actif %}
+                        </div>
                     </div>
+
                 </div>
 
-                {% if form.password1 %}
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Sécurité</div>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.password1 %}
-                    </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.password2 %}
-                    </div>
-                </div>
-                {% endif %}
+            </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Statut</div>
-                {% include "comptes/_field.html" with field=form.actif %}
-
-                <div class="d-flex justify-content-between mt-3">
-                    <a href="{% url 'comptes:utilisateur_list' %}" class="btn btn-danger">
-                        <i class="bi bi-x-lg me-1"></i>Annuler
-                    </a>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-lg me-1"></i>Enregistrer
-                    </button>
-                </div>
-            </form>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'comptes:utilisateur_list' %}" class="btn btn-danger">
+                    <i class="bi bi-x-lg me-1"></i>Annuler
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-lg me-1"></i>Enregistrer
+                </button>
+            </div>
+        </form>
         </div>
     </div>
 </div>

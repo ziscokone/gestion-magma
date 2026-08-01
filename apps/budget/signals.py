@@ -38,7 +38,8 @@ def creer_recette_abonnement(sender, instance, created, **kwargs):
         type_operation='entree',
         categorie='recette_abonnement',
         montant=instance.montant,
-        mode_paiement='especes',
+        mode_paiement=instance.mode_paiement,
+        operateur_mobile_money=instance.operateur_mobile_money,
         abonnement=instance,
         enregistre_par=instance.enregistre_par,
     )
@@ -49,6 +50,11 @@ def creer_operation_stock(sender, instance, created, **kwargs):
     if not created:
         return
     if instance.type_mouvement == 'entree':
+        if instance.motif == 'stock_initial':
+            # Inventaire de départ : le stock était déjà payé avant la mise en
+            # place du logiciel — aucune sortie de caisse à enregistrer ici,
+            # sous peine de compter cette dépense une deuxième fois.
+            return
         OperationBudget.objects.create(
             type_operation='sortie',
             categorie='achat_produit',

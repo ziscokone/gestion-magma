@@ -14,6 +14,7 @@ urlpatterns = [
     path('hub/', hub, name='hub'),
     path('configuration/', configuration_hub, name='configuration_hub'),
     path('', include('apps.comptes.urls')),
+    path('tableau-de-bord/', include('apps.dashboard.urls')),
     path('clients/', include('apps.clients.urls')),
     path('abonnements/', include('apps.abonnements.urls')),
     path('stock/', include('apps.stock.urls')),

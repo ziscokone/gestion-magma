@@ -2,50 +2,137 @@
 
 {% block title %}Nouvel abonnement — MAGMA{% endblock %}
 
+{% block extra_css %}
+<style>
+.operateur-badge {
+    cursor: pointer;
+    padding: .5rem .9rem;
+    font-size: .85rem;
+    color: #fff;
+    background-color: #6c757d;
+}
+.operateur-badge[data-operateur="wave"]   { background-color: #00CED1; }
+.operateur-badge[data-operateur="orange"] { background-color: #FF6600; }
+.operateur-badge[data-operateur="mtn"]    { background-color: #FFCC00; color: #000; }
+.operateur-badge[data-operateur="moov"]   { background-color: #003366; }
+.form-check-input:checked + .operateur-badge {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    <div class="card" style="max-width: 760px; margin: 0 auto;">
-        <div class="card-header">
-            <i class="bi bi-card-checklist me-2"></i>Nouvel abonnement
+    <div style="max-width: 1080px; margin: 0 auto; background: var(--color-bg-card); border-radius: 10px; box-shadow: var(--shadow-md); overflow: hidden;">
+
+        <div class="d-flex align-items-center gap-3" style="background: var(--color-accent); padding: 1.1rem 1.75rem;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-card-checklist" style="font-size:1.2rem;color:#fff;"></i>
+            </div>
+            <h4 class="mb-0" style="color:#fff;">Nouvel abonnement</h4>
         </div>
-        <div class="card-body p-4">
+
+        <div style="padding: 1.75rem;">
             {% if renouvellement %}
             <div class="alert alert-info">
                 <i class="bi bi-arrow-repeat me-2"></i>Renouvellement pré-rempli — vérifiez les informations puis enregistrez.
             </div>
             {% endif %}
+
             <form method="post">
                 {% csrf_token %}
+                <div class="row g-4">
 
-                <div class="text-uppercase text-muted small fw-bold mb-2">Client</div>
-                <div class="row">
-                    <div class="col-md-6 position-relative">
-                        {% include "comptes/_field.html" with field=form.telephone %}
-                        <small id="client-hint" class="text-muted"></small>
-                        <div id="client-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000; display:none;"></div>
+                    <!-- Colonne gauche : client + abonnement -->
+                    <div class="col-lg-6 d-flex flex-column gap-4">
+
+                        <div class="card">
+                            <div class="form-section-head">
+                                <div class="form-section-icon identite"><i class="bi bi-person-vcard"></i></div>
+                                <h6 class="form-section-title">Client</h6>
+                            </div>
+                            <div class="form-section-body">
+                                <div class="row position-relative">
+                                    <div class="col-md-6">
+                                        {% include "comptes/_field.html" with field=form.telephone %}
+                                        <small id="client-hint" class="text-muted"></small>
+                                        <div id="client-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index:1000; display:none;"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% include "comptes/_field.html" with field=form.nom_complet %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="form-section-head">
+                                <div class="form-section-icon abonnement"><i class="bi bi-card-checklist"></i></div>
+                                <h6 class="form-section-title">Abonnement</h6>
+                            </div>
+                            <div class="form-section-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {% include "comptes/_field.html" with field=form.type_abonnement %}
+                                        <div class="text-accent fw-bold" id="prix-affiche"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% include "comptes/_field.html" with field=form.date_debut %}
+                                        <small class="text-muted" id="date-fin-affichee"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.nom_complet %}
+
+                    <!-- Colonne droite : paiement -->
+                    <div class="col-lg-6 d-flex flex-column gap-4">
+
+                        <div class="card">
+                            <div class="form-section-head">
+                                <div class="form-section-icon paiement"><i class="bi bi-cash-coin"></i></div>
+                                <h6 class="form-section-title">Paiement</h6>
+                            </div>
+                            <div class="form-section-body">
+                                <div class="stat-card mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="stat-icon-circle accent"><i class="bi bi-cash-stack"></i></div>
+                                        <div class="text-start">
+                                            <div class="stat-value" id="prix-paiement">0 FCFA</div>
+                                            <div class="stat-label">Montant à régler à la souscription</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% include "comptes/_field.html" with field=form.mode_paiement %}
+
+                                <div id="operateur-row" style="display:none;">
+                                    <label class="form-label">Opérateur Mobile Money</label>
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        {% for value, label in form.operateur_mobile_money.field.choices %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="operateur_mobile_money"
+                                                   id="operateur-{{ value }}" value="{{ value }}"
+                                                   {% if form.operateur_mobile_money.value == value %}checked{% endif %}>
+                                            <label class="form-check-label badge operateur-badge" for="operateur-{{ value }}"
+                                                   data-operateur="{{ value }}">{{ label }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if form.operateur_mobile_money.errors %}
+                                    <div class="text-danger small mt-1">{{ form.operateur_mobile_money.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
+
                 </div>
 
-                <div class="text-uppercase text-muted small fw-bold mb-2 mt-2">Abonnement</div>
-                <div class="row">
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.type_abonnement %}
-                        <div class="text-accent fw-bold" id="prix-affiche"></div>
-                    </div>
-                    <div class="col-md-6">
-                        {% include "comptes/_field.html" with field=form.date_debut %}
-                        <small class="text-muted" id="date-fin-affichee"></small>
-                    </div>
-                </div>
-
-                <div class="alert alert-secondary mt-2">
-                    <i class="bi bi-cash-coin me-2"></i>Paiement intégral en espèces à la souscription, montant : <span class="fw-bold" id="prix-paiement"></span>.
-                </div>
-
-                <div class="d-flex justify-content-between mt-3">
+                <div class="d-flex justify-content-between mt-4">
                     <a href="{% url 'abonnements:abonnement_list' %}" class="btn btn-danger">
                         <i class="bi bi-x-lg me-1"></i>Annuler
                     </a>
@@ -75,13 +162,13 @@
 
     function formatFCFA(montant) {
         const n = Math.round(Number(montant));
-        if (isNaN(n)) { return ''; }
+        if (isNaN(n)) { return '0 FCFA'; }
         return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
     }
 
     function afficherPrixEtDateFin() {
         const info = TYPES[typeSelect.value];
-        if (!info) { prixAffiche.textContent = ''; prixPaiement.textContent = ''; dateFinAffichee.textContent = ''; return; }
+        if (!info) { prixAffiche.textContent = ''; prixPaiement.textContent = '0 FCFA'; dateFinAffichee.textContent = ''; return; }
         prixAffiche.textContent = formatFCFA(info.prix);
         prixPaiement.textContent = formatFCFA(info.prix);
         if (dateDebutInput.value) {
@@ -93,6 +180,15 @@
     typeSelect.addEventListener('change', afficherPrixEtDateFin);
     dateDebutInput.addEventListener('change', afficherPrixEtDateFin);
     afficherPrixEtDateFin();
+
+    const modePaiementSelect = document.getElementById('id_mode_paiement');
+    const operateurRow = document.getElementById('operateur-row');
+
+    function toggleOperateur() {
+        operateurRow.style.display = modePaiementSelect.value === 'mobile_money' ? 'block' : 'none';
+    }
+    modePaiementSelect.addEventListener('change', toggleOperateur);
+    toggleOperateur();
 
     const suggestionsBox = document.getElementById('client-suggestions');
 

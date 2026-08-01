@@ -137,6 +137,11 @@ class MouvementStock(ModePaiementMixin, models.Model):
         ('sortie', 'Sortie'),
     ]
 
+    MOTIF_ENTREE_CHOICES = [
+        ('achat', 'Achat fournisseur'),
+        ('stock_initial', 'Stock initial / Inventaire de départ'),
+    ]
+
     MOTIF_SORTIE_CHOICES = [
         ('vente', 'Vente au client'),
         ('perte', 'Casse / Perte'),
@@ -152,7 +157,9 @@ class MouvementStock(ModePaiementMixin, models.Model):
         Fournisseur, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='mouvements', verbose_name="Fournisseur"
     )
-    motif = models.CharField(max_length=20, choices=MOTIF_SORTIE_CHOICES, blank=True, verbose_name="Motif de sortie")
+    motif = models.CharField(
+        max_length=20, choices=MOTIF_ENTREE_CHOICES + MOTIF_SORTIE_CHOICES, blank=True, verbose_name="Motif"
+    )
     date_peremption = models.DateField(null=True, blank=True, verbose_name="Date de péremption")
     vente = models.ForeignKey(
         Vente, on_delete=models.CASCADE, null=True, blank=True,

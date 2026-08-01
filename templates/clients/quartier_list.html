@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Quartiers — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-geo-alt-fill me-2"></i>Quartiers</span>
+            <div>
+                <a href="{% url 'clients:client_repartition_zone' %}" class="btn btn-sm btn-outline-light me-1">
+                    <i class="bi bi-pie-chart me-1"></i>Répartition des clients
+                </a>
+                <a href="{% url 'clients:quartier_create' %}" class="btn btn-sm btn-accent">
+                    <i class="bi bi-plus-lg me-1"></i>Ajouter
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quartier in quartiers %}
+                    <tr>
+                        <td>{{ quartier.nom }}</td>
+                        <td>
+                            {% if quartier.actif %}
+                            <span class="badge badge-disponible"><i class="bi bi-check-circle-fill me-1"></i>Actif</span>
+                            {% else %}
+                            <span class="badge" style="background-color: var(--color-danger-light); color: var(--color-danger);">
+                                <i class="bi bi-x-circle-fill me-1"></i>Inactif
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'clients:quartier_update' quartier.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'clients:quartier_delete' quartier.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">Aucun quartier.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

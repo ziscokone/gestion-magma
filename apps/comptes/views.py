@@ -59,10 +59,24 @@ class UtilisateurCreateView(AdminRequiredMixin, CreateView):
 
 
 class UtilisateurUpdateView(AdminRequiredMixin, UpdateView):
+    """Un Manager ne peut modifier ni la fiche du Super Administrateur (accès
+    total, rôle et statut protégés — il ne doit jamais pouvoir se faire
+    verrouiller hors du logiciel), ni attribuer ce rôle à qui que ce soit."""
     model = Utilisateur
     form_class = UtilisateurUpdateForm
     template_name = 'comptes/utilisateur_form.html'
     success_url = reverse_lazy('comptes:utilisateur_list')
+
+    def get_object(self, queryset=None):
+        utilisateur = super().get_object(queryset)
+        if utilisateur.role == 'super_admin' and not self.request.user.is_super_admin:
+            raise PermissionDenied("Seul le Super Administrateur peut modifier ce compte.")
+        return utilisateur
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['current_user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, 'Utilisateur modifié avec succès.')
@@ -81,15 +95,19 @@ class UtilisateurDeleteView(SuperAdminRequiredMixin, DeleteView):
 
 
 class ModulesUtilisateurView(LoginRequiredMixin, View):
-    """Gestion des modules autorisés pour un utilisateur. Réservé aux administrateurs."""
+    """Gestion des modules autorisés pour un utilisateur. Réservé aux
+    administrateurs — et, comme pour la fiche elle-même, un Manager ne peut
+    pas toucher au compte du Super Administrateur."""
 
-    def _check_permission(self, request):
+    def _check_permission(self, request, cible=None):
         if not request.user.has_global_access:
             raise PermissionDenied
+        if cible is not None and cible.role == 'super_admin' and not request.user.is_super_admin:
+            raise PermissionDenied("Seul le Super Administrateur peut modifier ce compte.")
 
     def get(self, request, pk):
-        self._check_permission(request)
         cible = get_object_or_404(Utilisateur, pk=pk)
+        self._check_permission(request, cible)
         tous_modules = Module.objects.filter(actif=True).order_by('ordre')
         modules_actifs = set(cible.modules_autorises.values_list('pk', flat=True))
         return render(request, 'comptes/utilisateur_modules.html', {
@@ -99,8 +117,8 @@ class ModulesUtilisateurView(LoginRequiredMixin, View):
         })
 
     def post(self, request, pk):
-        self._check_permission(request)
         cible = get_object_or_404(Utilisateur, pk=pk)
+        self._check_permission(request, cible)
         selected_ids = request.POST.getlist('modules')
         cible.modules_autorises.set(Module.objects.filter(pk__in=selected_ids))
         messages.success(request, f'Accès aux modules mis à jour pour {cible.nom_complet}.')

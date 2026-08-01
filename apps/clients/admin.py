@@ -1,11 +1,18 @@
 from django.contrib import admin
-from .models import Client, Seance, TypePrestation
+from .models import Client, Quartier, Seance, TypePrestation
 
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ['nom_complet', 'telephone', 'nombre_seances']
+    list_display = ['nom_complet', 'telephone', 'quartier', 'nombre_seances']
+    list_filter = ['quartier']
     search_fields = ['nom_complet', 'telephone']
+
+
+@admin.register(Quartier)
+class QuartierAdmin(admin.ModelAdmin):
+    list_display = ['nom', 'actif']
+    list_editable = ['actif']
 
 
 @admin.register(TypePrestation)

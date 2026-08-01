@@ -1,3 +1,4 @@
+import itertools
 import json
 from datetime import date, datetime
 
@@ -325,6 +326,7 @@ class ApprovisionnementCreateView(LoginRequiredMixin, View):
             MouvementStock.objects.create(
                 produit=produit,
                 type_mouvement='entree',
+                motif='achat',
                 quantite=form.cleaned_data['quantite'],
                 prix_unitaire=form.cleaned_data['prix_unitaire'],
                 fournisseur=form.cleaned_data.get('fournisseur'),
@@ -339,6 +341,76 @@ class ApprovisionnementCreateView(LoginRequiredMixin, View):
             'form': form,
             'produits_info': _produits_info_json(),
         })
+
+
+class InventaireInitialView(AdminRequiredMixin, View):
+    """Saisie groupée du stock de départ, avant la mise en place — un
+    mouvement d'entrée par produit renseigné, sans impact sur la caisse
+    (le stock était déjà payé avant d'utiliser le logiciel, voir le signal
+    `creer_operation_stock`). Réservé Super Admin / Manager : contrairement
+    aux autres mouvements, celui-ci ne laisse aucune trace financière — un
+    utilisateur malveillant pourrait s'en servir pour combler un vol sans
+    que ça n'apparaisse jamais en caisse."""
+    template_name = 'stock/inventaire_initial.html'
+
+    def get(self, request):
+        produits = Produit.objects.filter(actif=True).select_related('categorie').order_by('categorie__nom', 'nom')
+        deja_initialises = set(
+            MouvementStock.objects.filter(motif='stock_initial').values_list('produit_id', flat=True)
+        )
+
+        groupes = [(categorie, list(items)) for categorie, items in itertools.groupby(produits, key=lambda p: p.categorie)]
+
+        # Répartition équilibrée des catégories entre deux colonnes (par nombre
+        # de produits, pas par nombre de catégories) pour que la page ne soit
+        # plus un unique tableau interminable.
+        groupes_par_taille = sorted(groupes, key=lambda g: len(g[1]), reverse=True)
+        colonne_gauche, colonne_droite = [], []
+        total_gauche = total_droite = 0
+        for groupe in groupes_par_taille:
+            if total_gauche <= total_droite:
+                colonne_gauche.append(groupe)
+                total_gauche += len(groupe[1])
+            else:
+                colonne_droite.append(groupe)
+                total_droite += len(groupe[1])
+        colonne_gauche.sort(key=lambda g: g[0].nom)
+        colonne_droite.sort(key=lambda g: g[0].nom)
+
+        return render(request, self.template_name, {
+            'colonne_gauche': colonne_gauche,
+            'colonne_droite': colonne_droite,
+            'deja_initialises': deja_initialises,
+        })
+
+    def post(self, request):
+        produits = Produit.objects.filter(actif=True)
+        nb_produits = 0
+        for produit in produits:
+            valeur = request.POST.get(f'qte_{produit.pk}', '').strip()
+            if not valeur:
+                continue
+            try:
+                quantite = int(valeur)
+            except ValueError:
+                continue
+            if quantite <= 0:
+                continue
+            MouvementStock.objects.create(
+                produit=produit,
+                type_mouvement='entree',
+                motif='stock_initial',
+                quantite=quantite,
+                prix_unitaire=produit.prix_achat,
+                enregistre_par=request.user,
+            )
+            nb_produits += 1
+
+        if nb_produits:
+            messages.success(request, f"Stock initial enregistré pour {nb_produits} produit(s) — sans impact sur la caisse.")
+        else:
+            messages.info(request, "Aucune quantité renseignée.")
+        return redirect('stock:mouvement_list')
 
 
 class VenteCreateView(LoginRequiredMixin, View):

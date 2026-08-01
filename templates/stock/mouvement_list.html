@@ -15,9 +15,25 @@
                 <a href="{% url 'stock:ajustement_create' %}" class="btn btn-sm btn-outline-light">
                     <i class="bi bi-box-arrow-up me-1"></i>Perte / Usage interne
                 </a>
-                <a href="{% url 'stock:approvisionnement_create' %}" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-box-arrow-in-down me-1"></i>Approvisionnement
-                </a>
+                <div class="dropdown">
+                    <button type="button" class="btn btn-sm btn-secondary-brand dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-box-arrow-in-down me-1"></i>Approvisionnement
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:approvisionnement_create' %}">
+                                <i class="bi bi-truck me-2"></i>Achat fournisseur
+                            </a>
+                        </li>
+                        {% if user.has_global_access %}
+                        <li>
+                            <a class="dropdown-item" href="{% url 'stock:inventaire_initial' %}">
+                                <i class="bi bi-clipboard2-data me-2"></i>Stock initial / Inventaire de départ
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
                 <a href="{% url 'stock:vente_create' %}" class="btn btn-sm btn-accent">
                     <i class="bi bi-cart-check me-1"></i>Nouvelle vente
                 </a>
@@ -78,7 +94,11 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if mouvement.type_mouvement == 'entree' %}
+                            {% if mouvement.motif == 'stock_initial' %}
+                            <span class="badge" style="background-color: var(--color-secondary); color: var(--color-text-primary);">
+                                <i class="bi bi-clipboard2-data me-1"></i>Stock initial
+                            </span>
+                            {% elif mouvement.type_mouvement == 'entree' %}
                                 {{ mouvement.fournisseur.nom|default:"—" }}
                             {% else %}
                                 {{ mouvement.get_motif_display }}
