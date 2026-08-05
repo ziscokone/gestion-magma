@@ -11,7 +11,11 @@ def hub(request):
         modules = Module.objects.filter(actif=True)
     else:
         modules = user.modules_autorises.filter(actif=True)
-    return render(request, 'hub.html', {'modules': modules})
+    afficher_ecran_chargement = request.session.pop('afficher_ecran_chargement', False)
+    return render(request, 'hub.html', {
+        'modules': modules,
+        'afficher_ecran_chargement': afficher_ecran_chargement,
+    })
 
 
 def module_placeholder(request, titre):

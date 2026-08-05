@@ -568,7 +568,8 @@ a:hover {
 }
 
 .table tbody tr:hover {
-    background-color: rgba(var(--color-accent-rgb), 0.03);
+    --bs-table-accent-bg: rgba(var(--color-hover-rgb), 0.12);
+    background-color: rgba(var(--color-hover-rgb), 0.12);
 }
 
 /* ==========================================================================
@@ -855,4 +856,115 @@ small, .small {
 .montant-sortie {
     color: var(--color-danger);
     font-weight: 700;
+}
+
+/* ==========================================================================
+   Écran de chargement (connexion / déconnexion)
+   ========================================================================== */
+
+.splash-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+    transition: opacity .5s ease, visibility .5s ease;
+}
+.splash-loader.splash-loader-hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.splash-logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: splash-fade-up .65s cubic-bezier(.22,1,.36,1) both;
+}
+
+.splash-logo-img {
+    width: 76px;
+    height: 76px;
+    object-fit: contain;
+    border-radius: 16px;
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    margin-bottom: 18px;
+}
+
+.splash-logo-fallback {
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 18px;
+}
+
+.splash-name {
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: .3px;
+    margin-bottom: 2px;
+    text-align: center;
+}
+
+.splash-slogan {
+    color: rgba(255,255,255,.65);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 34px;
+    text-align: center;
+}
+
+.splash-progress-track {
+    width: 220px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.22);
+    overflow: hidden;
+}
+.splash-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    background: var(--color-hover);
+    animation: splash-progress 3s linear forwards;
+}
+
+.splash-caption {
+    margin-top: 16px;
+    color: rgba(255,255,255,.75);
+    font-size: .78rem;
+    letter-spacing: .2px;
+    animation: splash-caption-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes splash-fade-up {
+    from { opacity: 0; transform: translateY(10px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes splash-progress {
+    from { width: 0%; }
+    to   { width: 100%; }
+}
+@keyframes splash-caption-pulse {
+    0%, 100% { opacity: .55; }
+    50%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .splash-logo-wrap, .splash-caption { animation: none; }
+    .splash-progress-fill { animation-duration: .01ms; animation-fill-mode: forwards; width: 100%; }
 }

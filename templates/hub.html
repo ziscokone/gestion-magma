@@ -341,4 +341,10 @@ footer {
     setInterval(tick, 1000);
 })();
 </script>
+{% if afficher_ecran_chargement %}
+<script>
+window.MagmaSplash.show();
+setTimeout(function () { window.MagmaSplash.hide(); }, 3000);
+</script>
+{% endif %}
 {% endblock %}

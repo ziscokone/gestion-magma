@@ -101,3 +101,8 @@ class Etablissement(models.Model):
     def couleur_accent_foncee(self):
         """État :hover des boutons déjà en couleur d'accent (ex : bouton "Nouvel abonnement")."""
         return assombrir_couleur(self.couleur_accent)
+
+    @property
+    def couleur_accent_rgb(self):
+        """'R,G,B' pour composer des rgba() CSS (ex : survol de lignes de tableau) à partir de la couleur d'accent."""
+        return '{},{},{}'.format(*hex_vers_rgb(self.couleur_accent))
