@@ -15,53 +15,159 @@
 </head>
 <body>
 
-<div class="splash-loader splash-loader-hide" id="splash-loader">
-    <div class="splash-logo-wrap">
-        {% if etablissement and etablissement.logo %}
-            <img src="{{ etablissement.logo.url }}" alt="Logo" class="splash-logo-img">
-        {% else %}
-            <div class="splash-logo-fallback"><i class="bi bi-building"></i></div>
-        {% endif %}
-        <div class="splash-name">{% if etablissement %}{{ etablissement.nom }}{% else %}MAGMA{% endif %}</div>
-        {% if etablissement and etablissement.slogan %}
-        <div class="splash-slogan">{{ etablissement.slogan }}</div>
-        {% endif %}
-        <div class="splash-progress-track">
-            <div class="splash-progress-fill"></div>
-        </div>
-        <div class="splash-caption">Chargement de votre espace...</div>
+{% include "core/_splash_loader.html" %}
+
+<!-- Petit indicateur de chargement centré, pour les transitions courantes
+     (clics sur boutons/liens) — contrairement à l'écran plein écran ci-dessus,
+     réservé aux moments plus marquants (connexion, déconnexion). -->
+<div class="mini-loader" id="mini-loader">
+    <div class="mini-loader-box">
+        <div class="mini-loader-spinner"></div>
+        <span id="mini-loader-texte">Chargement...</span>
     </div>
 </div>
 <script>
-window.MagmaSplash = {
-    show: function (caption) {
-        var splash = document.getElementById('splash-loader');
-        if (!splash) return;
-        if (caption) {
-            var cap = splash.querySelector('.splash-caption');
-            if (cap) cap.textContent = caption;
-        }
-        splash.classList.remove('splash-loader-hide');
-        var fill = splash.querySelector('.splash-progress-fill');
-        fill.style.animation = 'none';
-        void fill.offsetWidth;
-        fill.style.animation = '';
-        document.body.style.overflow = 'hidden';
+window.MiniChargement = {
+    show: function (legende) {
+        var el = document.getElementById('mini-loader');
+        if (!el) return;
+        var texte = document.getElementById('mini-loader-texte');
+        if (texte) texte.textContent = legende || 'Chargement...';
+        el.classList.add('mini-loader-show');
     },
     hide: function () {
-        var splash = document.getElementById('splash-loader');
-        if (!splash) return;
-        splash.classList.add('splash-loader-hide');
-        document.body.style.overflow = '';
+        var el = document.getElementById('mini-loader');
+        if (!el) return;
+        el.classList.remove('mini-loader-show');
     }
 };
+
+// Transition de chargement générique — petit indicateur centré (pas l'écran
+// plein écran, réservé à la connexion/déconnexion) : tout formulaire POST
+// (sauf ceux gérés par la modale de confirmation ci-dessous) l'affiche
+// brièvement avant de réellement soumettre, pour éviter l'effet "ça part trop
+// vite". Personnalisable via data-loading-legende / data-loading-delai sur le
+// <form> (ex : la déconnexion utilise le grand écran et un délai plus long).
 document.addEventListener('submit', function (e) {
     var form = e.target;
-    if (form.matches && form.matches('form[action*="logout"]')) {
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.dataset.confirmTitre) return;
+    if ((form.method || 'get').toLowerCase() !== 'post') return;
+    if (form.dataset.transitionEnvoyee === 'true') return;
+    if (form.matches('form[action*="logout"]')) {
         e.preventDefault();
-        window.MagmaSplash.show('Déconnexion en cours...');
-        setTimeout(function () { form.submit(); }, 3000);
+        window.MagmaSplash.show(form.dataset.loadingLegende || 'Déconnexion en cours...');
+        setTimeout(function () {
+            form.dataset.transitionEnvoyee = 'true';
+            form.submit();
+        }, parseInt(form.dataset.loadingDelai || '3000', 10));
+        return;
     }
+    e.preventDefault();
+    var legende = form.dataset.loadingLegende || 'Enregistrement...';
+    var delai = parseInt(form.dataset.loadingDelai || '250', 10);
+    window.MiniChargement.show(legende);
+    setTimeout(function () {
+        form.dataset.transitionEnvoyee = 'true';
+        form.submit();
+    }, delai);
+});
+
+// Même transition sur la navigation par lien (icônes de module, "Voir",
+// "Modifier", pagination, filtres...) — pas seulement les formulaires. On
+// laisse filer normalement les liens externes, les ancres, les toggles
+// Bootstrap (menus déroulants) et les ouvertures dans un nouvel onglet.
+document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    var lien = e.target.closest('a[href]');
+    if (!lien || lien.target === '_blank') return;
+    if (lien.hasAttribute('data-bs-toggle') || lien.hasAttribute('data-bs-dismiss')) return;
+    if (lien.dataset.noTransition === 'true') return;
+    var href = lien.getAttribute('href');
+    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+    if (href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (/^https?:\/\//i.test(href) && href.indexOf(window.location.origin) !== 0) return;
+    e.preventDefault();
+    var legende = lien.dataset.loadingLegende || 'Chargement...';
+    var delai = parseInt(lien.dataset.loadingDelai || '250', 10);
+    window.MiniChargement.show(legende);
+    setTimeout(function () {
+        window.location.href = href;
+        // Filet de sécurité : si la page ne change pas réellement (ex: téléchargement
+        // de fichier), on masque l'indicateur au lieu de le laisser bloqué.
+        setTimeout(function () { window.MiniChargement.hide(); }, 1200);
+    }, delai);
+});
+</script>
+
+<!-- Modale de confirmation générique — tout <form> portant data-confirm-titre
+     déclenche cette modale au submit ; la soumission réelle n'a lieu qu'au clic
+     sur "Confirmer" (avec la même transition de chargement que les autres formulaires). -->
+<div class="modal fade" id="modal-confirmation-action" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; border:none; overflow:hidden;">
+            <div class="modal-body text-center py-4 px-4">
+                <div id="modal-confirmation-icone" style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <i class="bi bi-question-circle"></i>
+                </div>
+                <h5 class="mb-2" id="modal-confirmation-titre"></h5>
+                <p class="text-muted mb-4" id="modal-confirmation-message"></p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-accent px-4" id="modal-confirmation-confirmer">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modalEl = document.getElementById('modal-confirmation-action');
+    if (!modalEl || typeof bootstrap === 'undefined') return;
+    var modal = new bootstrap.Modal(modalEl);
+    var titreEl = document.getElementById('modal-confirmation-titre');
+    var messageEl = document.getElementById('modal-confirmation-message');
+    var confirmerBtn = document.getElementById('modal-confirmation-confirmer');
+    var iconeEl = document.getElementById('modal-confirmation-icone');
+    var iconeI = iconeEl.querySelector('i');
+    var formEnAttente = null;
+
+    document.querySelectorAll('form[data-confirm-titre]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            if (form.dataset.transitionEnvoyee === 'true') return;
+            e.preventDefault();
+            formEnAttente = form;
+            titreEl.textContent = form.dataset.confirmTitre;
+            messageEl.textContent = form.dataset.confirmMessage || '';
+            var variant = form.dataset.confirmVariant || 'accent';
+            if (variant === 'danger') {
+                confirmerBtn.className = 'btn btn-danger px-4';
+                iconeEl.style.background = 'var(--color-danger-light)';
+                iconeI.style.color = 'var(--color-danger)';
+                iconeI.className = 'bi bi-exclamation-triangle';
+            } else {
+                confirmerBtn.className = 'btn btn-accent px-4';
+                iconeEl.style.background = 'var(--color-secondary)';
+                iconeI.style.color = 'var(--color-accent)';
+                iconeI.className = 'bi bi-question-circle';
+            }
+            modal.show();
+        });
+    });
+
+    confirmerBtn.addEventListener('click', function () {
+        if (!formEnAttente) return;
+        modal.hide();
+        var form = formEnAttente;
+        formEnAttente = null;
+        var legende = form.dataset.loadingLegende || 'Enregistrement...';
+        var delai = parseInt(form.dataset.loadingDelai || '250', 10);
+        window.MiniChargement.show(legende);
+        setTimeout(function () {
+            form.dataset.transitionEnvoyee = 'true';
+            form.submit();
+        }, delai);
+    });
 });
 </script>
 
@@ -309,16 +415,37 @@ document.addEventListener('submit', function (e) {
 </nav>
 {% endblock navbar %}
 
-<!-- Messages flash -->
+<!-- Messages flash (toasts) -->
 {% if messages %}
-<div class="container mt-3">
+<div class="toast-stack">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="app-toast app-toast-{{ message.tags }}" role="alert">
+        <div class="app-toast-icon">
+            {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill"></i>
+            {% elif message.tags == 'danger' %}<i class="bi bi-x-circle-fill"></i>
+            {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+            {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+        </div>
+        <div class="app-toast-body">{{ message }}</div>
+        <button type="button" class="app-toast-close" aria-label="Fermer">&times;</button>
     </div>
     {% endfor %}
 </div>
+<script>
+(function () {
+    document.querySelectorAll('.app-toast').forEach(function (toast) {
+        var delai = toast.classList.contains('app-toast-success') || toast.classList.contains('app-toast-info') ? 3000 : 6000;
+        function fermer() {
+            if (toast.classList.contains('app-toast-hide')) return;
+            toast.classList.add('app-toast-hide');
+            setTimeout(function () { toast.remove(); }, 300);
+        }
+        var closeBtn = toast.querySelector('.app-toast-close');
+        if (closeBtn) closeBtn.addEventListener('click', fermer);
+        setTimeout(fermer, delai);
+    });
+})();
+</script>
 {% endif %}
 
 <main class="py-4">

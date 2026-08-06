@@ -968,3 +968,112 @@ small, .small {
     .splash-logo-wrap, .splash-caption { animation: none; }
     .splash-progress-fill { animation-duration: .01ms; animation-fill-mode: forwards; width: 100%; }
 }
+
+/* Toasts (messages flash) */
+.toast-stack {
+    position: fixed;
+    top: 88px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 380px;
+    pointer-events: none;
+}
+
+.app-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.16);
+    padding: 14px 16px;
+    border-left: 4px solid var(--color-accent);
+    animation: app-toast-in .35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: auto;
+}
+
+.app-toast.app-toast-hide {
+    animation: app-toast-out .3s ease-in forwards;
+}
+
+@keyframes app-toast-in {
+    from { transform: translateX(40px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes app-toast-out {
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(40px); opacity: 0; }
+}
+
+.app-toast-icon { font-size: 1.25rem; line-height: 1; margin-top: 1px; flex-shrink: 0; }
+.app-toast-body { flex: 1; font-size: .88rem; color: var(--color-text-primary); padding-right: 4px; line-height: 1.4; }
+.app-toast-close {
+    background: none; border: none; font-size: 1.2rem; line-height: 1; color: var(--color-text-secondary);
+    cursor: pointer; padding: 0; margin-left: 4px; flex-shrink: 0;
+}
+.app-toast-close:hover { color: var(--color-text-primary); }
+
+.app-toast-success { border-left-color: var(--color-success); }
+.app-toast-success .app-toast-icon { color: var(--color-success); }
+.app-toast-danger { border-left-color: var(--color-danger); }
+.app-toast-danger .app-toast-icon { color: var(--color-danger); }
+.app-toast-warning { border-left-color: var(--color-warning); }
+.app-toast-warning .app-toast-icon { color: var(--color-warning); }
+.app-toast-info, .app-toast-debug { border-left-color: var(--color-accent); }
+.app-toast-info .app-toast-icon, .app-toast-debug .app-toast-icon { color: var(--color-accent); }
+
+@media (max-width: 480px) {
+    .toast-stack { left: 12px; right: 12px; max-width: none; top: 76px; }
+}
+
+/* Mini indicateur de chargement (transitions courantes clic bouton/lien) */
+.mini-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .15s ease;
+}
+.mini-loader.mini-loader-show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+.mini-loader-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18);
+    padding: 12px 18px;
+}
+.mini-loader-spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid var(--color-accent);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: mini-loader-spin .7s linear infinite;
+    flex-shrink: 0;
+}
+#mini-loader-texte {
+    font-size: .85rem;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+}
+@keyframes mini-loader-spin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .mini-loader-spinner { animation-duration: 1.4s; }
+}

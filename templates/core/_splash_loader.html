@@ -1,0 +1,41 @@
+<div class="splash-loader splash-loader-hide" id="splash-loader">
+    <div class="splash-logo-wrap">
+        {% if etablissement and etablissement.logo %}
+            <img src="{{ etablissement.logo.url }}" alt="Logo" class="splash-logo-img">
+        {% else %}
+            <div class="splash-logo-fallback"><i class="bi bi-building"></i></div>
+        {% endif %}
+        <div class="splash-name">{% if etablissement %}{{ etablissement.nom }}{% else %}MAGMA{% endif %}</div>
+        {% if etablissement and etablissement.slogan %}
+        <div class="splash-slogan">{{ etablissement.slogan }}</div>
+        {% endif %}
+        <div class="splash-progress-track">
+            <div class="splash-progress-fill"></div>
+        </div>
+        <div class="splash-caption">Chargement de votre espace...</div>
+    </div>
+</div>
+<script>
+window.MagmaSplash = {
+    show: function (caption) {
+        var splash = document.getElementById('splash-loader');
+        if (!splash) return;
+        if (caption) {
+            var cap = splash.querySelector('.splash-caption');
+            if (cap) cap.textContent = caption;
+        }
+        splash.classList.remove('splash-loader-hide');
+        var fill = splash.querySelector('.splash-progress-fill');
+        fill.style.animation = 'none';
+        void fill.offsetWidth;
+        fill.style.animation = '';
+        document.body.style.overflow = 'hidden';
+    },
+    hide: function () {
+        var splash = document.getElementById('splash-loader');
+        if (!splash) return;
+        splash.classList.add('splash-loader-hide');
+        document.body.style.overflow = '';
+    }
+};
+</script>
