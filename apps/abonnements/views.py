@@ -19,7 +19,9 @@ from core.qr import qr_code_data_uri
 from core.utils import rendre_gabarit_message
 from apps.clients.models import Client
 from apps.etablissement.models import Etablissement, MESSAGE_PARTAGE_CARTE_DEFAUT, MESSAGE_RELANCE_DEFAUT
+from apps.fne.services import certifier_facture
 from .carte import generer_carte_abonnement_png
+from .fne_mapping import construire_payload_vente
 from .forms import AbonnementForm, TypeAbonnementForm
 from .models import Abonnement, TypeAbonnement
 
@@ -145,6 +147,7 @@ class AbonnementCreateView(LoginRequiredMixin, View):
                 operateur_mobile_money=form.cleaned_data.get('operateur_mobile_money', ''),
                 enregistre_par=request.user,
             )
+            certifier_facture(construire_payload_vente(abonnement), objet_lie=abonnement)
 
             messages.success(request, f"Abonnement enregistré pour {client.nom_complet}.")
             return redirect('abonnements:abonnement_detail', pk=abonnement.pk)

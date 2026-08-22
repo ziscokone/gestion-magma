@@ -18,6 +18,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from apps.fne.services import derniere_certification
 from core.pdf import BORDER, ROW_ALT, bandeau_entete, get_couleur_principale, pied_de_page
 from core.qr import qr_drawing
 from core.utils import format_fcfa, montant_en_lettres
@@ -27,8 +28,35 @@ FICHE_LARGEUR = 170 * mm
 MENTION_LEGALE = "Ce document ne constitue pas une facture normalisée. Merci de votre confiance."
 
 
-def _pied_de_page(styles):
-    return pied_de_page(styles, mention=MENTION_LEGALE)
+def _pied_de_page(styles, certifie):
+    """Mention légale de repli seulement si la facture n'est pas certifiée
+    FNE — une facture certifiée porte déjà sa propre référence officielle
+    (bandeau `_sticker_fne`), la mention "non normalisée" serait fausse."""
+    return pied_de_page(styles, mention=None if certifie else MENTION_LEGALE)
+
+
+def _sticker_fne(couleur, largeur, certification):
+    """Bandeau de certification FNE (DGI) : QR de vérification officiel (le
+    `token` renvoyé par la plateforme) + référence — n'apparaît que si la
+    certification a réellement réussi, jamais deviné ou pré-affiché."""
+    qr = qr_drawing(certification.token_verification, taille=16 * mm)
+    texte = Paragraph(
+        "<b>FACTURE NORMALISÉE ÉLECTRONIQUE</b><br/>"
+        f"<font size=8>Certifiée DGI — Référence {certification.reference_fne}</font>",
+        ParagraphStyle('fne_sticker_texte', fontName='Helvetica-Bold', fontSize=10.5,
+                        textColor=colors.white, leading=13),
+    )
+    bloc = Table([[qr, texte]], colWidths=[22 * mm, largeur - 22 * mm])
+    bloc.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), couleur),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (0, -1), 8),
+        ('LEFTPADDING', (1, 0), (1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+    ]))
+    return bloc
 
 
 def _bloc_signature(largeur):
@@ -128,12 +156,17 @@ def generer_fiche_abonnement_pdf(abonnement):
     styles = getSampleStyleSheet()
     elements = []
     couleur_principale = get_couleur_principale()
+    certification = derniere_certification(abonnement)
+    certifie = certification is not None and certification.statut == 'succes'
 
     elements.append(bandeau_entete(
         FICHE_LARGEUR,
         f"<b>REÇU N° {abonnement.numero_recu}</b><br/>Émis le {timezone.now():%d/%m/%Y}",
     ))
-    elements.append(Spacer(1, 14 * mm))
+    elements.append(Spacer(1, 6 * mm) if certifie else Spacer(1, 14 * mm))
+    if certifie:
+        elements.append(_sticker_fne(couleur_principale, FICHE_LARGEUR, certification))
+        elements.append(Spacer(1, 8 * mm))
 
     largeur_carte = (FICHE_LARGEUR - 6 * mm) / 2
     carte_client = _bloc_info(
@@ -178,7 +211,7 @@ def generer_fiche_abonnement_pdf(abonnement):
     elements.append(Spacer(1, 14 * mm))
     elements.append(_pied_avec_qr(styles, FICHE_LARGEUR, f"MAGMA — Reçu abonnement N° {abonnement.numero_recu}"))
     elements.append(Spacer(1, 8 * mm))
-    elements.extend(_pied_de_page(styles))
+    elements.extend(_pied_de_page(styles, certifie))
 
     doc.build(elements)
     buffer.seek(0)

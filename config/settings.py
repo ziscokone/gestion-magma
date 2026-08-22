@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.stock',
     'apps.budget',
     'apps.dashboard',
+    'apps.fne',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,17 @@ AXES_COOLOFF_TIME = 1
 AXES_RESET_ON_SUCCESS = True
 AXES_ENABLE_ADMIN = True
 AXES_VERBOSE = False
+
+# ─── FNE (Facture Normalisée Électronique — DGI Côte d'Ivoire) ──
+# FNE_ACTIF=False tant que la clé API n'est pas fournie par le client : le
+# module journalise alors les tentatives sans appeler la plateforme, plutôt
+# que d'échouer sur chaque abonnement enregistré.
+FNE_ACTIF = os.environ.get('FNE_ACTIF', 'False') == 'True'
+FNE_API_KEY = os.environ.get('FNE_API_KEY', '')
+FNE_BASE_URL = os.environ.get('FNE_BASE_URL', 'http://54.247.95.108/ws')
+FNE_POINT_OF_SALE = os.environ.get('FNE_POINT_OF_SALE', '')
+FNE_ETABLISSEMENT = os.environ.get('FNE_ETABLISSEMENT', '')
+# Code de TVA (TVA/TVAB/TVAC/TVAD) à appliquer sur chaque article — dépend du
+# régime fiscal réel de l'établissement, à confirmer avec le client avant la
+# mise en production. TVAC (exonération conventionnelle) en attendant.
+FNE_TAXE_CODE = os.environ.get('FNE_TAXE_CODE', 'TVAC')

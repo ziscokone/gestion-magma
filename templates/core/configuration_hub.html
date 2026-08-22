@@ -51,6 +51,7 @@
 .config-tile-icon.budget       { background: linear-gradient(135deg, #a05dc8, #7b3fa8); }
 .config-tile-icon.comptes      { background: linear-gradient(135deg, #e05b52, #b52b22); }
 .config-tile-icon.whatsapp     { background: linear-gradient(135deg, #34d399, #128c7e); }
+.config-tile-icon.fne          { background: linear-gradient(135deg, #ff8a3d, #d9540a); }
 
 .config-tile-name {
     font-weight: 700;
@@ -109,6 +110,11 @@
                     <div class="config-tile-icon whatsapp"><i class="bi bi-whatsapp"></i></div>
                     <div class="config-tile-name">Messages WhatsApp</div>
                     <p class="config-tile-desc">Carte de membre & relances</p>
+                </a>
+                <a href="{% url 'fne:certification_list' %}" class="config-tile">
+                    <div class="config-tile-icon fne"><i class="bi bi-patch-check-fill"></i></div>
+                    <div class="config-tile-name">Certifications FNE</div>
+                    <p class="config-tile-desc">Facturation normalisée (DGI)</p>
                 </a>
             </div>
         </div>

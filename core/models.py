@@ -14,7 +14,7 @@ class ModePaiementMixin(models.Model):
     MODE_PAIEMENT_CHOICES = [
         ('especes', 'Espèces'),
         ('mobile_money', 'Mobile Money'),
-        ('autre', 'Autre'),
+        ('cheque', 'Chèque'),
     ]
 
     OPERATEUR_MOBILE_MONEY_CHOICES = [
@@ -61,7 +61,7 @@ def modes_paiement_filtrables():
         ('orange', 'Orange Money', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'orange'}, ModePaiementMixin.OPERATEUR_COULEURS['orange']),
         ('mtn', 'MTN Money', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'mtn'}, ModePaiementMixin.OPERATEUR_COULEURS['mtn']),
         ('moov', 'Moov Money', {'mode_paiement': 'mobile_money', 'operateur_mobile_money': 'moov'}, ModePaiementMixin.OPERATEUR_COULEURS['moov']),
-        ('autre', 'Autre', {'mode_paiement': 'autre'}, '#6c757d'),
+        ('cheque', 'Chèque', {'mode_paiement': 'cheque'}, '#6c757d'),
     ]
 
 

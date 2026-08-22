@@ -34,7 +34,7 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = [
-            'nom_complet', 'telephone', 'indicatif_pays', 'photo_cni',
+            'nom_complet', 'telephone', 'email', 'indicatif_pays', 'photo_cni',
             'quartier', 'adresse',
             'sexe', 'date_naissance', 'objectif',
             'taille', 'poids', 'bassin',
@@ -44,6 +44,7 @@ class ClientForm(forms.ModelForm):
         widgets = {
             'nom_complet': forms.TextInput(attrs={'class': 'form-control'}),
             'telephone': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'photo_cni': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'quartier': forms.Select(attrs={'class': 'form-select'}),
             'adresse': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),

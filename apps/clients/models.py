@@ -47,6 +47,7 @@ class Client(models.Model):
 
     public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     telephone = models.CharField(max_length=20, unique=True, verbose_name="Téléphone")
+    email = models.EmailField(blank=True, verbose_name="Email")
     indicatif_pays = models.CharField(
         max_length=6, blank=True, choices=CHOIX_INDICATIFS_PAYS,
         verbose_name="Indicatif pays (si différent du défaut établissement)",

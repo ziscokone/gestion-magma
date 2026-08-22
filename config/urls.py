@@ -20,6 +20,7 @@ urlpatterns = [
     path('stock/', include('apps.stock.urls')),
     path('budget/', include('apps.budget.urls')),
     path('etablissement/', include('apps.etablissement.urls')),
+    path('fne/', include('apps.fne.urls')),
 ]
 
 if settings.DEBUG:

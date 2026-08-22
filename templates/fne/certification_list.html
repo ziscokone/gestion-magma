@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Certifications FNE — MAGMA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-patch-check-fill me-2"></i>Certifications FNE (DGI)</span>
+            <div class="btn-group btn-group-sm">
+                <a href="?statut=tous" class="btn btn-outline-light {% if statut_filtre == 'tous' %}active{% endif %}">Tous</a>
+                <a href="?statut=succes" class="btn btn-outline-light {% if statut_filtre == 'succes' %}active{% endif %}">Certifiés</a>
+                <a href="?statut=echec" class="btn btn-outline-light {% if statut_filtre == 'echec' %}active{% endif %}">Échecs</a>
+                <a href="?statut=desactive" class="btn btn-outline-light {% if statut_filtre == 'desactive' %}active{% endif %}">Non tentés</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">
+                Journal des tentatives de certification des factures auprès de la plateforme FNE de la DGI.
+                Une facture non certifiée reste normalement enregistrée dans MAGMA — vous pouvez relancer la
+                certification ici une fois le problème résolu (clé API, connexion, etc.).
+            </p>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Statut</th>
+                            <th>Objet lié</th>
+                            <th>Référence FNE</th>
+                            <th>Date</th>
+                            <th>Détail</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for certification in certifications %}
+                        <tr>
+                            <td>
+                                {% if certification.statut == 'succes' %}
+                                <span class="badge bg-success">Certifié</span>
+                                {% elif certification.statut == 'echec' %}
+                                <span class="badge bg-danger">Échec</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Non tenté</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if certification.objet_lie %}
+                                    {{ certification.content_type.name|capfirst }} — {{ certification.objet_lie }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ certification.reference_fne|default:"—" }}</td>
+                            <td>{{ certification.date_tentative|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if certification.statut == 'succes' and certification.token_verification %}
+                                <a href="{{ certification.token_verification }}" target="_blank" rel="noopener">
+                                    <i class="bi bi-qr-code me-1"></i>Vérifier
+                                </a>
+                                {% elif certification.erreur_message %}
+                                <span class="text-danger small">{{ certification.erreur_message }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if certification.peut_etre_relancee %}
+                                <form method="post" action="{% url 'fne:certification_relancer' certification.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Relancer la certification">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">Aucune certification pour le moment.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% include "core/_pagination.html" with page_obj=page_obj %}
+        </div>
+    </div>
+</div>
+{% endblock %}

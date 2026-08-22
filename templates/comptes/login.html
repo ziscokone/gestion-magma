@@ -11,7 +11,7 @@
     {% include "core/_brand_vars.html" %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -175,6 +175,11 @@
 
         .login-info-features {
             margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, auto);
+            grid-auto-flow: column;
+            column-gap: 1.5rem;
         }
 
         .feature-item {
@@ -211,6 +216,12 @@
 
             .login-info-content h2 {
                 font-size: 1.65rem;
+            }
+
+            .login-info-features {
+                grid-template-columns: 1fr;
+                grid-template-rows: none;
+                grid-auto-flow: row;
             }
         }
 
