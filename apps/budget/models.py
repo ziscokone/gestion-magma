@@ -87,6 +87,16 @@ class OperationBudget(ModePaiementMixin, models.Model):
         related_name='operations_budget_enregistrees', verbose_name="Enregistré par"
     )
 
+    # Une opération de caisse ne se supprime jamais (traçabilité comptable) —
+    # une saisie manuelle erronée est annulée, pas effacée : elle reste
+    # visible dans le journal mais sort des totaux/soldes.
+    annulee = models.BooleanField(default=False, verbose_name="Annulée")
+    date_annulation = models.DateTimeField(null=True, blank=True, verbose_name="Date d'annulation")
+    annulee_par = models.ForeignKey(
+        'comptes.Utilisateur', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='operations_budget_annulees', verbose_name="Annulée par"
+    )
+
     class Meta:
         ordering = ['-date']
         verbose_name = "Opération budgétaire"
@@ -116,8 +126,10 @@ class OperationBudget(ModePaiementMixin, models.Model):
         from apps.etablissement.models import Etablissement
         etablissement = Etablissement.get_instance()
         solde_initial = etablissement.solde_initial_caisse if etablissement else 0
-        entrees = cls.objects.filter(type_operation='entree').aggregate(total=Sum('montant'))['total'] or 0
-        sorties = cls.objects.filter(type_operation='sortie').exclude(
+        entrees = cls.objects.filter(
+            type_operation='entree', annulee=False
+        ).aggregate(total=Sum('montant'))['total'] or 0
+        sorties = cls.objects.filter(type_operation='sortie', annulee=False).exclude(
             categorie__in=cls.CATEGORIES_HORS_CAISSE
         ).aggregate(total=Sum('montant'))['total'] or 0
         return solde_initial + entrees - sorties

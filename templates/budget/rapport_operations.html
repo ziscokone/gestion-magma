@@ -113,7 +113,7 @@
                 </thead>
                 <tbody>
                     {% for operation in operations %}
-                    <tr>
+                    <tr {% if operation.annulee %}class="text-muted"{% endif %}>
                         <td>{{ operation.date|date:"d/m/Y H:i" }}</td>
                         <td>
                             {% if operation.type_operation == 'entree' %}
@@ -123,6 +123,7 @@
                                 <i class="bi bi-arrow-up-right-circle-fill me-1"></i>Sortie
                             </span>
                             {% endif %}
+                            {% if operation.annulee %}<span class="badge bg-secondary ms-1">Annulée</span>{% endif %}
                         </td>
                         <td>
                             {{ operation.get_categorie_display }}
@@ -130,7 +131,9 @@
                             {% if operation.description %}<div class="text-muted small">{{ operation.description }}</div>{% endif %}
                         </td>
                         <td>
-                            {% if operation.type_operation == 'entree' %}
+                            {% if operation.annulee %}
+                            <span class="text-muted" style="text-decoration: line-through;">{{ operation.montant|fcfa }}</span>
+                            {% elif operation.type_operation == 'entree' %}
                             <span class="montant-entree"><i class="bi bi-plus-circle-fill me-1"></i>{{ operation.montant|fcfa }}</span>
                             {% else %}
                             <span class="montant-sortie"><i class="bi bi-dash-circle-fill me-1"></i>{{ operation.montant|fcfa }}</span>

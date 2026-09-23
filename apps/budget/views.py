@@ -56,7 +56,7 @@ def _operations_rapport(request):
 
 def _exporter_excel(queryset, nom_fichier):
     """Génère le classeur Excel partagé par les différents exports du journal."""
-    entetes = ['Date', 'Type', 'Catégorie', 'Sous-catégorie de charge', 'Montant (FCFA)', 'Mode de paiement', 'Description']
+    entetes = ['Date', 'Type', 'Catégorie', 'Sous-catégorie de charge', 'Montant (FCFA)', 'Mode de paiement', 'Description', 'Statut']
     classeur = Workbook()
     feuille = classeur.active
     feuille.title = 'Opérations'
@@ -74,6 +74,7 @@ def _exporter_excel(queryset, nom_fichier):
             operation.montant,
             operation.mode_paiement_affiche,
             operation.description,
+            'Annulée' if operation.annulee else '',
         ])
 
     for colonne in feuille.columns:
@@ -111,11 +112,11 @@ class OperationBudgetListView(LoginRequiredMixin, ListView):
         context['solde_caisse'] = OperationBudget.solde_caisse()
 
         today = date.today()
-        ops_today = OperationBudget.objects.filter(date__date=today)
+        ops_today = OperationBudget.objects.filter(date__date=today, annulee=False)
         context['recettes_jour'] = sum(o.montant for o in ops_today.filter(type_operation='entree'))
         context['depenses_jour'] = sum(o.montant for o in ops_today.filter(type_operation='sortie'))
 
-        ops_month = OperationBudget.objects.filter(date__year=today.year, date__month=today.month)
+        ops_month = OperationBudget.objects.filter(date__year=today.year, date__month=today.month, annulee=False)
         context['recettes_mois'] = sum(o.montant for o in ops_month.filter(type_operation='entree'))
         context['depenses_mois'] = sum(o.montant for o in ops_month.filter(type_operation='sortie'))
         return context
@@ -146,8 +147,10 @@ class OperationBudgetCreateView(LoginRequiredMixin, View):
         return render(request, self.template_name, {'form': form})
 
 
-class OperationBudgetDeleteView(LoginRequiredMixin, View):
-    """Suppression réservée aux opérations saisies manuellement."""
+class OperationBudgetAnnulerView(AdminRequiredMixin, View):
+    """Annulation (jamais de suppression) réservée aux opérations saisies
+    manuellement — Manager/Super Admin uniquement. L'opération reste dans le
+    journal pour la traçabilité, mais sort des totaux et du solde de caisse."""
 
     def post(self, request, pk):
         try:
@@ -160,11 +163,16 @@ class OperationBudgetDeleteView(LoginRequiredMixin, View):
             messages.error(
                 request,
                 "Cette opération est générée automatiquement depuis une séance, un abonnement "
-                "ou un mouvement de stock — corrigez-la à la source plutôt que de la supprimer ici."
+                "ou un mouvement de stock — corrigez-la à la source plutôt que de l'annuler ici."
             )
+        elif operation.annulee:
+            messages.info(request, "Cette opération est déjà annulée.")
         else:
-            operation.delete()
-            messages.success(request, 'Opération supprimée avec succès.')
+            operation.annulee = True
+            operation.date_annulation = timezone.now()
+            operation.annulee_par = request.user
+            operation.save(update_fields=['annulee', 'date_annulation', 'annulee_par'])
+            messages.success(request, 'Opération annulée avec succès.')
         return redirect('budget:operation_list')
 
 
@@ -203,7 +211,7 @@ class RapportOperationsView(LoginRequiredMixin, ListView):
         context['categorie_filtre'] = self.request.GET.get('categorie', 'toutes')
         context['categories'] = OperationBudget.CATEGORIE_CHOICES
 
-        operations_periode = _operations_rapport(self.request)
+        operations_periode = _operations_rapport(self.request).filter(annulee=False)
         entrees = operations_periode.filter(type_operation='entree')
         sorties = operations_periode.filter(type_operation='sortie')
         context['nb_entrees'] = entrees.count()
@@ -258,7 +266,7 @@ class BilanMensuelView(LoginRequiredMixin, View):
             mois_selectionne = mois_disponibles[0] if mois_disponibles else date.today().replace(day=1)
 
         operations_mois = OperationBudget.objects.filter(
-            date__year=mois_selectionne.year, date__month=mois_selectionne.month,
+            date__year=mois_selectionne.year, date__month=mois_selectionne.month, annulee=False,
         )
         entrees_mois = operations_mois.filter(type_operation='entree')
         sorties_mois = operations_mois.filter(type_operation='sortie')

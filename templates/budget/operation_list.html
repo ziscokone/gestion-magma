@@ -110,7 +110,7 @@
                 </thead>
                 <tbody>
                     {% for operation in operations %}
-                    <tr>
+                    <tr {% if operation.annulee %}class="text-muted"{% endif %}>
                         <td>
                             <input type="checkbox" name="ids" value="{{ operation.pk }}" form="export-selection-form"
                                    class="form-check-input operation-checkbox">
@@ -124,6 +124,11 @@
                                 <i class="bi bi-arrow-up-right-circle-fill me-1"></i>Sortie
                             </span>
                             {% endif %}
+                            {% if operation.annulee %}
+                            <span class="badge bg-secondary ms-1" title="Annulée le {{ operation.date_annulation|date:'d/m/Y H:i' }}{% if operation.annulee_par %} par {{ operation.annulee_par.nom_complet }}{% endif %}">
+                                Annulée
+                            </span>
+                            {% endif %}
                         </td>
                         <td>
                             {{ operation.get_categorie_display }}
@@ -131,11 +136,9 @@
                             {% if operation.description %}<div class="text-muted small">{{ operation.description }}</div>{% endif %}
                         </td>
                         <td>
-                            {% if operation.type_operation == 'entree' %}
-                            <span class="montant-entree"><i class="bi bi-plus-circle-fill me-1"></i>{{ operation.montant|fcfa }}</span>
-                            {% else %}
-                            <span class="montant-sortie"><i class="bi bi-dash-circle-fill me-1"></i>{{ operation.montant|fcfa }}</span>
-                            {% endif %}
+                            <span {% if operation.annulee %}class="text-muted" style="text-decoration: line-through;"{% elif operation.type_operation == 'entree' %}class="montant-entree"{% else %}class="montant-sortie"{% endif %}>
+                                {% if not operation.annulee %}<i class="bi {% if operation.type_operation == 'entree' %}bi-plus-circle-fill{% else %}bi-dash-circle-fill{% endif %} me-1"></i>{% endif %}{{ operation.montant|fcfa }}
+                            </span>
                         </td>
                         <td>{{ operation.mode_paiement_affiche }}</td>
                         <td>
@@ -148,12 +151,12 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            {% if not operation.est_automatique %}
-                            <form method="post" action="{% url 'budget:operation_delete' operation.pk %}" class="d-inline"
-                                  onsubmit="return confirm('Supprimer cette opération ?');">
+                            {% if not operation.est_automatique and not operation.annulee and request.user.has_global_access %}
+                            <form method="post" action="{% url 'budget:operation_annuler' operation.pk %}" class="d-inline"
+                                  onsubmit="return confirm('Annuler cette opération ? Elle restera visible dans le journal mais ne comptera plus dans les totaux.');">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
+                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Annuler">
+                                    <i class="bi bi-x-circle"></i>
                                 </button>
                             </form>
                             {% endif %}
